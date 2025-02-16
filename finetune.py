@@ -68,9 +68,9 @@ Please answer the following legal question.
 EOS_TOKEN = tokenizer.eos_token
 
 def formatting_prompts_func(examples):
-    inputs = examples["Question"]
-    cots = examples["Complex_CoT"]
-    outputs = examples["Response"]
+    inputs = examples["Base Query"]
+    cots = examples["Rewriting 1"]
+    outputs = examples["Rewriting 3"]
     texts = []
     for input_text, cot, output_text in zip(inputs, cots, outputs):
         text = train_prompt_style.format(input_text, cot, output_text) + EOS_TOKEN
@@ -78,7 +78,7 @@ def formatting_prompts_func(examples):
     return {"text": texts}
 
 from datasets import load_dataset
-dataset = load_dataset("kienhoang123/QR-legal", "en", split="train[0:500]", trust_remote_code=True)
+dataset = load_dataset("kienhoang123/QR-legal", "default", split="train[0:500]", trust_remote_code=True)
 dataset = dataset.map(formatting_prompts_func, batched=True)
 print(dataset["text"][0])
 
