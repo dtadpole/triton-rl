@@ -16,14 +16,17 @@ fourbit_models = [
     "unsloth/llama-3-8b-bnb-4bit",           # Llama-3 15 trillion tokens model 2x faster!
     "unsloth/llama-3-8b-Instruct-bnb-4bit",
     "unsloth/llama-3-70b-bnb-4bit",
+    "unsloth/DeepSeek-R1-Distill-Llama-70B-bnb-4bit",
     "unsloth/Phi-3-mini-4k-instruct",        # Phi-3 2x faster!
     "unsloth/Phi-3-medium-4k-instruct",
     "unsloth/mistral-7b-bnb-4bit",
     "unsloth/gemma-7b-bnb-4bit",             # Gemma 2.2x faster!
+    "unsloth/DeepSeek-R1-Distill-Qwen-14B",
 ] # More models at https://huggingface.co/unsloth
 
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name = "unsloth/llama-3-8b-bnb-4bit",
+    # model_name = "unsloth/llama-3-8b-bnb-4bit",
+    model_name = "unsloth/DeepSeek-R1-Distill-Qwen-14B",
     max_seq_length = max_seq_length,
     dtype = None,
     load_in_4bit = True,
