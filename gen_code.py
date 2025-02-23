@@ -4,17 +4,17 @@ import subprocess
 from google import genai
 from google.genai import types
 from prompts import COMMON_PROMPT, TEST_CASES
-from gemini import gemini_gen
-from fireworks import deepseek_gen
+from api import API_ENDPOINTS
 
-test_case = "rmsnorm"
+test_case = "softmax"
+api_name = "deepseek"
 
 # response_text = deepseek_gen(COMMON_PROMPT + TEST_CASES[test_case])
-response_text = gemini_gen(COMMON_PROMPT + TEST_CASES[test_case])
+response_text = API_ENDPOINTS[api_name](COMMON_PROMPT + TEST_CASES[test_case])
 
 # create a folder for the code and logs, starts with code_gen_<timestamp>
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-folder_name = f"code_gen_{timestamp}_{test_case}"
+folder_name = f"code_gen_{timestamp}_{test_case}_{api_name}"
 os.makedirs(folder_name, exist_ok=True)
 
 # write response to log file
@@ -48,12 +48,9 @@ for test_command in test_commands:
     print("--------------------------------")
     print(cmd)
     print("--------------------------------")
-    # run command and print output as we go, do not wait for the command to finish
-    process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, env=os.environ)
-    while True:
-        output = process.stdout.readline().decode('utf-8').rstrip()
-        if output:
-            print(output)  # Print stdout as it becomes available
-        if process.poll() is not None:  # Check if process has finished
-            break
-    process.wait()
+    # run command and print output and error separately, use subprocess.run
+    process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
+    print(process.stdout.decode('utf-8'))
+    print("--------------------------------")
+    print(process.stderr.decode('utf-8'))
+    print("--------------------------------")
