@@ -6,7 +6,7 @@ from google.genai import types
 from gen_code_prompts import COMMON_PROMPT, TEST_CASES
 from gen_code_api import API_ENDPOINTS
 
-test_case = "matmul"
+test_case = "rmsnorm_with_linear"
 api_name = "deepseek"
 
 # response_text = deepseek_gen(COMMON_PROMPT + TEST_CASES[test_case])

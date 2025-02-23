@@ -84,6 +84,21 @@ Generate triton code for RMSNorm, test correctness and performance using followi
 ```
 """,
 
+    "rmsnorm_with_linear": """
+Generate triton code for RMSNorm with Linear layer, test correctness and performance using following code literally:
+```python
+    batch_sizes = [256, 512, 1024, 2048];
+    dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096];
+    def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
+        x = torch.randn(batch_size, dim_size, device=device, dtype=dtype)
+        weight = torch.randn(dim_size, device=device, dtype=dtype)
+        eps = 1e-5
+        return x, weight, eps
+    verify_correctness(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
+    benchmark_performance(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
+```
+""",
+
     "matmul": """
 Generate triton code for Matrix Multiplication,
     use autotune for block sizes (BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K), use super blocks and autotune GROUP_SIZE_M,
