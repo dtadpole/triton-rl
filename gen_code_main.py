@@ -6,7 +6,7 @@ from google.genai import types
 from gen_code_prompts import COMMON_PROMPT, TEST_CASES
 from gen_code_api import API_ENDPOINTS
 
-test_case = "rmsnorm_with_linear"
+test_case = "matmul"
 api_name = "deepseek"
 
 # response_text = deepseek_gen(COMMON_PROMPT + TEST_CASES[test_case])
@@ -40,7 +40,7 @@ for code_block in code_blocks:
         f.write(code_block)
 
 # extract test commands from response.text
-test_commands = re.findall(r'```bash\n(.*?)```', response_text, re.DOTALL)
+test_commands = re.findall(r'<test>.*?```bash\n(.*?)```.*?</test>', response_text, re.DOTALL)
 # run test commands and print the output
 for test_command in test_commands:
     #cmd = f"bash -c 'cd {folder_name} && /home/centos/miniconda3/envs/torch26/bin/{test_command.strip()}'"

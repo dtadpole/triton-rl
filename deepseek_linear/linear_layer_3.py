@@ -261,7 +261,7 @@ def test_forward():
         print("❌ Forward pass failed!")
 
 def test_backward():
-    torch.manual_seed(0)
+    # torch.manual_seed(0)
     in_features = 512
     out_features = 2048
     batch_size = 768

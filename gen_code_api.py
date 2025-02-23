@@ -8,6 +8,8 @@ API_ENDPOINTS = {
     "deepseek": lambda prompt: deepseek_gen(prompt),
 }
 
+benchmark_code = open("benchmark.py").read()
+
 gemini_client = genai.Client(api_key="AIzaSyBk5082INxetg6K79MFycnzmiRMFAwTjLQ")
 
 def gemini_gen(prompt):
@@ -30,7 +32,8 @@ def deepseek_gen(prompt):
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     payload = {
         "model": "accounts/fireworks/models/deepseek-r1",
-        "max_tokens": 20480,
+        # "max_tokens": 20480,
+        "max_tokens": 40960,
         "top_p": 1,
         "top_k": 40,
         "presence_penalty": 0,
@@ -44,6 +47,11 @@ def deepseek_gen(prompt):
             {
                 "role": "user",
                 "content": prompt
+            },
+            {
+                "role": "file",
+                "name": "benchmark.py",
+                "content": benchmark_code,
             }
         ]
     }
