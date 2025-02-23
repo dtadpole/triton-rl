@@ -200,7 +200,6 @@ class TritonLinearFunction(torch.autograd.Function):
             weight.stride(0), weight.stride(1), # (out_features, in_features)
             dx.stride(0), dx.stride(1), # (n, in_features)
         )
-        # dx = dx / K_dx
 
         dw = torch.empty_like(weight)
         M_dw, N_dw, K_dw = out_features, in_features, n
@@ -212,9 +211,9 @@ class TritonLinearFunction(torch.autograd.Function):
         linear_backward_dw_kernel[grid_dw](
             dy, x, dw,
             M_dw, N_dw, K_dw,
-            stride_dy_out, stride_dy_n,
-            x.stride(0), x.stride(1),
-            dw.stride(0), dw.stride(1),
+            stride_dy_out, stride_dy_n, # (out_features, n)
+            x.stride(0), x.stride(1), # (n, in_features)
+            dw.stride(0), dw.stride(1), # (out_features, in_features)
         )
 
         return dx, dw
