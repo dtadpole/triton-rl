@@ -54,3 +54,11 @@ for test_command in test_commands:
     print("--------------------------------")
     print(process.stderr.decode('utf-8'))
     print("--------------------------------")
+    # get the exit code
+    exit_code = process.returncode
+    if exit_code != 0:
+        print(f"Test failed with exit code {exit_code}")
+        break
+    else:
+        print(f"Test passed with exit code {exit_code}")
+    print("--------------------------------")

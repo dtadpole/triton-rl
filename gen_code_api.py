@@ -10,6 +10,9 @@ API_ENDPOINTS = {
 
 benchmark_code = open("benchmark.py").read()
 
+
+chutes_fingerprint = "x7EkUNSjOn6AIuVyqBGglespCtPHdMYF"
+
 gemini_client = genai.Client(api_key="AIzaSyBk5082INxetg6K79MFycnzmiRMFAwTjLQ")
 
 def gemini_gen(prompt):
