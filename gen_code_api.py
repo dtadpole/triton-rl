@@ -8,14 +8,12 @@ API_ENDPOINTS = {
     "deepseek": lambda prompt: deepseek_gen(prompt),
 }
 
-benchmark_code = open("benchmark.py").read()
-
 
 chutes_fingerprint = "x7EkUNSjOn6AIuVyqBGglespCtPHdMYF"
 
 gemini_client = genai.Client(api_key="AIzaSyBk5082INxetg6K79MFycnzmiRMFAwTjLQ")
 
-def gemini_gen(prompt):
+def gemini_gen(messages):
     response = gemini_client.models.generate_content(
         model="gemini-2.0-flash",
         # model="gemini-2.0-pro-exp-02-05",
@@ -23,7 +21,7 @@ def gemini_gen(prompt):
             # response_mime_type="text/markdown",
             # system_instruction="",
         ),
-        contents=[prompt],
+        contents=messages, # TODO check here: https://ai.google.dev/gemini-api/docs/quickstart?lang=rest
     )
     return response.text
 
@@ -31,7 +29,7 @@ def gemini_gen(prompt):
 
 fireworks_api_key = "fw_3ZLEAizPSPuTZhKnoKdf55Ri"
 
-def deepseek_gen(prompt):
+def deepseek_gen(messages):
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     payload = {
         "model": "accounts/fireworks/models/deepseek-r1",
@@ -42,21 +40,7 @@ def deepseek_gen(prompt):
         "presence_penalty": 0,
         "frequency_penalty": 0,
         "temperature": 0.6,
-        "messages": [
-            {
-                "role": "system",
-                "content": "",
-            },
-            {
-                "role": "user",
-                "content": prompt
-            },
-            {
-                "role": "file",
-                "name": "benchmark.py",
-                "content": benchmark_code,
-            }
-        ]
+        "messages": messages
     }
     headers = {
         "Accept": "application/json",

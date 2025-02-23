@@ -6,24 +6,47 @@ from google.genai import types
 from gen_code_prompts import COMMON_PROMPT, TEST_CASES
 from gen_code_api import API_ENDPOINTS
 
-test_case = "matmul"
+test_case = "rmsnorm"
 api_name = "deepseek"
-
-# response_text = deepseek_gen(COMMON_PROMPT + TEST_CASES[test_case])
-response_text = API_ENDPOINTS[api_name](COMMON_PROMPT + TEST_CASES[test_case])
 
 # create a folder for the code and logs, starts with code_gen_<timestamp>
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 folder_name = f"code_gen_{timestamp}_{test_case}_{api_name}"
 os.makedirs(folder_name, exist_ok=True)
 
+# write benchmark.py to folder
+benchmark_code = open("benchmark.py").read()
+benchmark_code_file = f"{folder_name}/benchmark.py"
+with open(benchmark_code_file, "w") as f:
+    f.write(benchmark_code)
+
+messages = [
+    {
+        "role": "system",
+        "content": ""
+    },
+    {
+        "role": "user",
+        "content": COMMON_PROMPT
+    },
+    {
+        "role": "user",
+        "content": TEST_CASES[test_case]
+    },
+    {
+        "role": "file",
+        "name": "benchmark.py",
+        "content": benchmark_code
+    }
+]
+
+# response_text = deepseek_gen(COMMON_PROMPT + TEST_CASES[test_case])
+response_text = API_ENDPOINTS[api_name](messages)
+
+
 # write response to log file
 with open(f"{folder_name}/gen_code.log", "w") as f:
     f.write(response_text)
-
-# copy benchmark.py to the folder
-import shutil
-shutil.copy("benchmark.py", f"{folder_name}/benchmark.py")
 
 # match response.text with regex and extract the code blocks
 import re
