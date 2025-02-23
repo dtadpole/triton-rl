@@ -31,7 +31,7 @@ def generate_configs(dims):
     return configs
 
 
-def verify_correctness(func_triton, func_torch, input_generator, dimensions, device='cuda', dtype=torch.float32, atol=1e-5, rtol=1e-5, seed=42):
+def verify_correctness(func_triton, func_torch, input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
     """
     Verifies the correctness of the Triton implementation against PyTorch.
     """
@@ -49,22 +49,23 @@ def verify_correctness(func_triton, func_torch, input_generator, dimensions, dev
             torch_output = func_torch(inputs)
 
         if torch.allclose(triton_output, torch_output, atol=atol, rtol=rtol):
-            print(f"✅ Correctness test passed for shape ({config})")
+            print(f"✅ Correctness test passed for shape ({config}, {dtype})")
             passed += 1
         else:
-            print(f"❌ Correctness test failed for shape ({config})")
+            print(f"❌ Correctness test failed for shape ({config}, {dtype})")
         total += 1
 
     return passed, total
 
 
-def benchmark_performance(func_triton, func_torch, input_generator, dimensions, num_warmup=10, num_repeats=100, device='cuda', dtype=torch.float32):
+def benchmark_performance(func_triton, func_torch, input_generator, dimensions, num_warmup=10, num_repeats=100, device='cuda', dtype=torch.float16):
     """
     Benchmarks the performance of the Triton implementation against PyTorch.
     """
     torch.manual_seed(0)
 
     configs = generate_configs(dimensions)
+    quantiles = [0.5]
 
     pytorch_compiled = torch.compile(func_torch, mode="max-autotune")
 
@@ -78,17 +79,17 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
             inputs = (inputs,)
 
         # Triton timing
-        time_triton = triton.testing.do_bench(lambda: func_triton(*inputs), warmup=num_warmup, rep=num_repeats) * 1e3
+        time_triton = triton.testing.do_bench(lambda: func_triton(*inputs), warmup=num_warmup, rep=num_repeats, quantiles=quantiles) * 1e3
         timings_triton.append(time_triton)
 
         # PyTorch timing
-        time_pytorch = triton.testing.do_bench(lambda: pytorch_compiled(*inputs), warmup=num_warmup, rep=num_repeats) * 1e3
+        time_pytorch = triton.testing.do_bench(lambda: pytorch_compiled(*inputs), warmup=num_warmup, rep=num_repeats, quantiles=quantiles) * 1e3
         timings_pytorch.append(time_pytorch)
 
         speedup = time_pytorch / time_triton
         speedups.append(speedup)
 
-        print(f"Shape: ({config}), Triton: {time_triton:.1f} us, PyTorch: {time_pytorch:.1f} us, Speedup: {speedup:.2f}x")
+        print(f"Shape: ({config}, {dtype}), Triton: {time_triton:.1f} us, PyTorch: {time_pytorch:.1f} us, Speedup: {speedup:.2f}x")
 
     # Graphing
     fig, ax1 = plt.subplots(figsize=(12, 6))
@@ -98,10 +99,10 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
     width = 0.35
 
     ax1.bar(x - width/2, timings_triton, width, label='Triton', color='blue')
-    ax1.bar(x + width/2, timings_pytorch, width, label='PyTorch (Compiled)', color='red')
+    ax1.bar(x + width/2, timings_pytorch, width, label='PyTorch', color='red')
 
     ax1.set_ylabel('Time (us)')
-    ax1.set_xlabel('Tensor Shape (Batch Size, Dimension)')
+    ax1.set_xlabel('Tensor Shape')
     ax1.set_title('Performance Comparison')
     ax1.set_xticks(x)
     ax1.set_xticklabels(x_labels, rotation=45)
