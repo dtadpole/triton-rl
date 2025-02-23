@@ -57,6 +57,6 @@ def deepseek_gen(prompt):
     return response.json()["choices"][0]["message"]["content"]
 
 if __name__ == "__main__":
-    from prompts import COMMON_PROMPT, MATMUL_PROMPT
+    from gen_code_prompts import COMMON_PROMPT, MATMUL_PROMPT
     print(API_ENDPOINTS["gemini"](COMMON_PROMPT + MATMUL_PROMPT))
     print(API_ENDPOINTS["deepseek"](COMMON_PROMPT + MATMUL_PROMPT))

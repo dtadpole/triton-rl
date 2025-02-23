@@ -3,10 +3,10 @@ import datetime
 import subprocess
 from google import genai
 from google.genai import types
-from prompts import COMMON_PROMPT, TEST_CASES
-from api import API_ENDPOINTS
+from gen_code_prompts import COMMON_PROMPT, TEST_CASES
+from gen_code_api import API_ENDPOINTS
 
-test_case = "softmax"
+test_case = "matmul"
 api_name = "deepseek"
 
 # response_text = deepseek_gen(COMMON_PROMPT + TEST_CASES[test_case])
