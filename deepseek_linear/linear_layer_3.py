@@ -1,7 +1,8 @@
 import torch
 import triton
 import triton.language as tl
-import time
+import math
+import torch.nn as nn
 
 @triton.autotune(
     configs=[
@@ -218,25 +219,26 @@ class TritonLinearFunction(torch.autograd.Function):
 
         return dx, dw
 
-class LinearTriton(torch.nn.Module):
-    def __init__(self, in_features, out_features):
+class LinearTriton(nn.Module):
+    def __init__(self, in_features, out_features, device=None, dtype=None):
         super().__init__()
+        factory_kwargs = {"device": device, "dtype": dtype}
         self.in_features = in_features
         self.out_features = out_features
+        self.weight = nn.Parameter(torch.empty((out_features, in_features), **factory_kwargs))
         self.reset_parameters()
 
     def reset_parameters(self, param_init=None):
         if param_init is None:
-            self.weight = torch.randn(self.out_features, self.in_features, device='cuda')
-            self.weight = torch.nn.functional.normalize(self.weight, dim=-1).requires_grad_()
+            nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
         else:
-            self.weight = param_init.clone().detach().requires_grad_()
+            self.weight.data.copy_(param_init)
 
     def forward(self, x):
         return TritonLinearFunction.apply(x, self.weight)
 
-    def backward(self, dy):
-        return self.TritonLinearFunction.backward(dy)
+    # def backward(self, dy):
+    #     return self.TritonLinearFunction.backward(dy)
 
 
 def test_forward():
@@ -244,17 +246,13 @@ def test_forward():
     in_features = 512
     out_features = 2048
     batch_size = 768
-    x = torch.randn(batch_size, in_features, device='cuda')
+    x = torch.randn(batch_size, in_features, device='cuda', dtype=torch.float16)
     x = torch.nn.functional.normalize(x, dim=1)
 
-    linear_torch = torch.nn.Linear(in_features, out_features, bias=False, device='cuda')
-    linear_triton = LinearTriton(in_features, out_features)
+    linear_torch = torch.nn.Linear(in_features, out_features, bias=False, device='cuda', dtype=torch.float16)
+    linear_triton = LinearTriton(in_features, out_features, device='cuda', dtype=torch.float16)
     linear_triton.reset_parameters(linear_torch.weight)
 
-    # weight = torch.randn(out_features, in_features, device='cuda')
-    # weight = torch.nn.functional.normalize(weight, dim=1)
-    # y_triton = TritonLinearFunction.apply(x, weight)
-    # y_pytorch = torch.nn.functional.linear(x, weight, bias=None)
     y_triton = linear_triton(x)
     y_pytorch = linear_torch(x)
     if torch.allclose(y_triton, y_pytorch, rtol=1e-2, atol=1e-2):
@@ -267,16 +265,14 @@ def test_backward():
     in_features = 512
     out_features = 2048
     batch_size = 768
-    x = torch.randn(batch_size, in_features, device='cuda', requires_grad=True)
-    x = torch.nn.functional.normalize(x, dim=1)
+    x = torch.randn(batch_size, in_features, device='cuda', dtype=torch.float16)
+    x = nn.functional.normalize(x, dim=1)
 
-    linear_torch = torch.nn.Linear(in_features, out_features, bias=False, device='cuda')
-    linear_triton = LinearTriton(in_features, out_features)
+    linear_torch = nn.Linear(in_features, out_features, bias=False, device='cuda', dtype=torch.float16)
+    linear_triton = LinearTriton(in_features, out_features, device='cuda', dtype=torch.float16)
     linear_triton.reset_parameters(linear_torch.weight)
-    # weight = torch.randn(out_features, in_features, device='cuda', requires_grad=True)
-    # weight = torch.nn.functional.normalize(weight, dim=1)
 
-    dy = torch.randn(batch_size, out_features, device='cuda')
+    dy = torch.randn(batch_size, out_features, device='cuda', dtype=torch.float16)
     dy = torch.nn.functional.normalize(dy, dim=1)
 
     # Triton backward
@@ -313,28 +309,29 @@ def benchmark(device='cuda', forward=True, backward=True):
         dy = torch.randn(M, N, device=device, dtype=torch.float16)
         quantiles = [0.5, 0.2, 0.8]
 
+        linear_torch = torch.nn.Linear(K, N, bias=False, device='cuda', dtype=torch.float16)
+        linear_triton = LinearTriton(K, N, device='cuda', dtype=torch.float16)
+
         if forward:
             print(f'Forward pass - {M}x{K} @ {N}x{K}^T -> {M}x{N}')
-            triton_time = triton.testing.do_bench(lambda: TritonLinearFunction.apply(x, weight), quantiles=quantiles)
-            torch_time = triton.testing.do_bench(lambda: torch.nn.functional.linear(x, weight, bias=None), quantiles=quantiles)
+            triton_time = triton.testing.do_bench(lambda: linear_triton(x), quantiles=quantiles)
+            torch_time = triton.testing.do_bench(lambda: linear_torch(x), quantiles=quantiles)
             print(f'Triton: {triton_time[0]:.3f} ms')
             print(f'PyTorch: {torch_time[0]:.3f} ms')
             print(f'Speedup: {torch_time[0]/triton_time[0]:.2f}x')
 
         if backward:
             print(f'Backward pass - dX: {M}x{N} @ {N}x{K} -> {M}x{K}, dW: {N}x{M} @ {M}x{K} -> {N}x{K}')
+            x_triton = x.clone().detach().requires_grad_()
+            x_torch = x.clone().detach().requires_grad_()
             def triton_backward():
-                x_triton = x.clone().detach().requires_grad_()
-                weight_triton = weight.clone().detach().requires_grad_()
-                y_triton = TritonLinearFunction.apply(x_triton, weight_triton)
+                y_triton = linear_triton(x_triton)
                 y_triton.backward(dy)
-                dx_triton, dw_triton = x_triton.grad, weight_triton.grad
+                # dx_triton, dw_triton = x_triton.grad, linear_triton.weight.grad
             def torch_backward():
-                x_torch = x.clone().detach().requires_grad_()
-                weight_torch = weight.clone().detach().requires_grad_()
-                y = torch.nn.functional.linear(x_torch, weight_torch, bias=None)
-                y.backward(dy)
-                dx_torch, dw_torch = x_torch.grad, weight_torch.grad
+                y_torch = linear_torch(x_torch)
+                y_torch.backward(dy)
+                # dx_torch, dw_torch = x_torch.grad, linear_torch.weight.grad
             triton_time = triton.testing.do_bench(triton_backward, quantiles=quantiles)
             torch_time = triton.testing.do_bench(torch_backward, quantiles=quantiles)
             print(f'Triton: {triton_time[0]:.3f} ms')
