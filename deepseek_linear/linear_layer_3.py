@@ -218,6 +218,27 @@ class TritonLinearFunction(torch.autograd.Function):
 
         return dx, dw
 
+class LinearTriton(torch.nn.Module):
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.reset_parameters()
+
+    def reset_parameters(self, param_init=None):
+        if param_init is None:
+            self.weight = torch.randn(self.out_features, self.in_features, device='cuda')
+            self.weight = torch.nn.functional.normalize(self.weight, dim=-1).requires_grad_()
+        else:
+            self.weight = param_init.clone().detach().requires_grad_()
+
+    def forward(self, x):
+        return TritonLinearFunction.apply(x, self.weight)
+
+    def backward(self, dy):
+        return self.TritonLinearFunction.backward(dy)
+
+
 def test_forward():
     torch.manual_seed(0)
     in_features = 512
@@ -225,10 +246,17 @@ def test_forward():
     batch_size = 768
     x = torch.randn(batch_size, in_features, device='cuda')
     x = torch.nn.functional.normalize(x, dim=1)
-    weight = torch.randn(out_features, in_features, device='cuda')
-    weight = torch.nn.functional.normalize(weight, dim=1)
-    y_triton = TritonLinearFunction.apply(x, weight)
-    y_pytorch = torch.nn.functional.linear(x, weight, bias=None)
+
+    linear_torch = torch.nn.Linear(in_features, out_features, bias=False, device='cuda')
+    linear_triton = LinearTriton(in_features, out_features)
+    linear_triton.reset_parameters(linear_torch.weight)
+
+    # weight = torch.randn(out_features, in_features, device='cuda')
+    # weight = torch.nn.functional.normalize(weight, dim=1)
+    # y_triton = TritonLinearFunction.apply(x, weight)
+    # y_pytorch = torch.nn.functional.linear(x, weight, bias=None)
+    y_triton = linear_triton(x)
+    y_pytorch = linear_torch(x)
     if torch.allclose(y_triton, y_pytorch, rtol=1e-2, atol=1e-2):
         print("✅ Forward pass passed!")
     else:
@@ -241,36 +269,40 @@ def test_backward():
     batch_size = 768
     x = torch.randn(batch_size, in_features, device='cuda', requires_grad=True)
     x = torch.nn.functional.normalize(x, dim=1)
-    weight = torch.randn(out_features, in_features, device='cuda', requires_grad=True)
-    weight = torch.nn.functional.normalize(weight, dim=1)
+
+    linear_torch = torch.nn.Linear(in_features, out_features, bias=False, device='cuda')
+    linear_triton = LinearTriton(in_features, out_features)
+    linear_triton.reset_parameters(linear_torch.weight)
+    # weight = torch.randn(out_features, in_features, device='cuda', requires_grad=True)
+    # weight = torch.nn.functional.normalize(weight, dim=1)
+
     dy = torch.randn(batch_size, out_features, device='cuda')
     dy = torch.nn.functional.normalize(dy, dim=1)
 
     # Triton backward
     x_triton = x.clone().detach().requires_grad_()
-    weight_triton = weight.clone().detach().requires_grad_()
-    y_triton = TritonLinearFunction.apply(x_triton, weight_triton)
+    y_triton = linear_triton(x_triton)
     y_triton.backward(dy)
-    dx_triton, dw_triton = x_triton.grad, weight_triton.grad
+    dx_triton, dw_triton = x_triton.grad, linear_triton.weight.grad
 
     # PyTorch backward
     x_pytorch = x.clone().detach().requires_grad_()
-    weight_pytorch = weight.clone().detach().requires_grad_()
-    y_pytorch = torch.nn.functional.linear(x_pytorch, weight_pytorch, bias=None)
+    y_pytorch = linear_torch(x_pytorch)
     y_pytorch.backward(dy)
-    dx_pytorch, dw_pytorch = x_pytorch.grad, weight_pytorch.grad
+    dx_pytorch, dw_pytorch = x_pytorch.grad, linear_torch.weight.grad
 
     if torch.allclose(dx_triton, dx_pytorch, rtol=1e-2, atol=1e-2):
         print("✅ Backward dx grad passed!")
     else:
         print("❌ Backward dx grad failed!")
-    if torch.allclose(dw_triton, dw_pytorch, rtol=1e-2, atol=1e-2):
+    if torch.allclose(dw_pytorch, dw_triton, rtol=1e-2, atol=1e-2):
         print("✅ Backward dw grad passed!")
     else:
         print("❌ Backward dw grad failed!")
 
 def benchmark(device='cuda', forward=True, backward=True):
     sizes = [
+        (512, 512, 512),
         (1024, 1024, 1024),
         (2048, 2048, 2048),
         (4096, 4096, 4096),
