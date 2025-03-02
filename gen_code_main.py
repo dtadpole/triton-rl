@@ -4,7 +4,7 @@ import subprocess
 import json
 from google import genai
 from google.genai import types
-from prompts import BASE_PROMPTS, FIX_PROMPTS, TEST_CASES
+from prompts import BASE_PROMPTS, FIX_PROMPTS
 from gen_code_api import API_ENDPOINTS
 import argparse
 
@@ -101,13 +101,13 @@ while len(ITER_QUEUE) > 0:
     print(f"Processing {iter_config}")
     print("--------------------------------")
 
-    base_folder_name = iter_config["parent"]
-    code_folder_name = iter_config["child"]
+    base_folder = iter_config["parent"]
+    code_folder = iter_config["child"]
 
     # ERR_MESSAGE is the error message from the last iteration
     ERR_MESSAGE = ""
-    if os.path.exists(os.path.join(base_folder_name, "code.stderr")):
-        with open(os.path.join(base_folder_name, "code.stderr"), "r") as f:
+    if os.path.exists(os.path.join(base_folder, "code.stderr")):
+        with open(os.path.join(base_folder, "code.stderr"), "r") as f:
             ERR_MESSAGE = f.read()
 
     # if there is a .failed file, set FIX_MODE to True
@@ -119,11 +119,11 @@ while len(ITER_QUEUE) > 0:
         request_messages = codegen_messages(iter_config["parent"])
 
     # create a folder for the code and logs, starts with code_gen_<timestamp>
-    code_folder_name = iter_config["child"]
-    os.makedirs(code_folder_name, exist_ok=True)
+    code_folder = iter_config["child"]
+    os.makedirs(code_folder, exist_ok=True)
 
     # write request_messages to log file
-    with open(os.path.join(code_folder_name, "api_request.json"), "w") as f:
+    with open(os.path.join(code_folder, "api_request.json"), "w") as f:
         f.write(json.dumps(request_messages, indent=4))
 
     response_message = API_ENDPOINTS[args.api](request_messages)
@@ -133,14 +133,14 @@ while len(ITER_QUEUE) > 0:
         if file == "prompt.txt" or file.endswith(".py"):
             with open(os.path.join(iter_config["parent"], file), "r") as f:
                 content = f.read()
-            with open(os.path.join(code_folder_name, file), "w") as f:
+            with open(os.path.join(code_folder, file), "w") as f:
                 f.write(content)
 
     # write response to log file
-    with open(os.path.join(code_folder_name, "api_response.json"), "w") as f:
+    with open(os.path.join(code_folder, "api_response.json"), "w") as f:
         f.write(json.dumps(response_message, indent=4))
 
-    with open(os.path.join(code_folder_name, "api_response.md"), "w") as f:
+    with open(os.path.join(code_folder, "api_response.md"), "w") as f:
         f.write(f"API: {args.api}\n")
         f.write(f"Test Case: {args.dir}\n")
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -166,8 +166,8 @@ while len(ITER_QUEUE) > 0:
     # write the code blocks to files
     for code_block in code_blocks:
         filename = code_block.split("\n")[0].split("# filename: ")[1]
-        print(f"writing file: {os.path.join(code_folder_name, filename)}")
-        with open(os.path.join(code_folder_name, filename), "w") as f:
+        print(f"writing file: {os.path.join(code_folder, filename)}")
+        with open(os.path.join(code_folder, filename), "w") as f:
             f.write(code_block)
 
     # extract test commands from response.text
@@ -176,51 +176,51 @@ while len(ITER_QUEUE) > 0:
     if len(test_commands) > 0:
         TEST_COMMAND = test_commands[0].strip()
         # write test command to log file
-        with open(os.path.join(code_folder_name, "test.command"), "w") as f:
+        with open(os.path.join(code_folder, "test.command"), "w") as f:
             f.write(TEST_COMMAND)
-    cmd = f"bash -c 'cd {code_folder_name} && {TEST_COMMAND}'"
+    cmd = f"bash -c 'cd {code_folder} && {TEST_COMMAND}'"
     print("--------------------------------")
     print(cmd)
     print("--------------------------------")
     # run command and print output and error separately, use subprocess.run
     process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
-    OUTPUT_MESSAGE = process.stdout.decode('utf-8')
-    if OUTPUT_MESSAGE != "":
-        with open(os.path.join(code_folder_name, "code.stdout"), "w") as f:
-            f.write(OUTPUT_MESSAGE)
-    print(OUTPUT_MESSAGE)
+    STDOUT_MESSAGE = process.stdout.decode('utf-8')
+    if STDOUT_MESSAGE != "":
+        with open(os.path.join(code_folder, "code.stdout"), "w") as f:
+            f.write(STDOUT_MESSAGE)
+    print(STDOUT_MESSAGE)
     print("--------------------------------")
-    ERR_MESSAGE = process.stderr.decode('utf-8')
-    if ERR_MESSAGE != "":
-        with open(os.path.join(code_folder_name, "code.stderr"), "w") as f:
-            f.write(ERR_MESSAGE)
-    print(ERR_MESSAGE)
+    STDERR_MESSAGE = process.stderr.decode('utf-8')
+    if STDERR_MESSAGE != "":
+        with open(os.path.join(code_folder, "code.stderr"), "w") as f:
+            f.write(STDERR_MESSAGE)
+    print(STDERR_MESSAGE)
     print("--------------------------------")
     # get the exit code
     exit_code = process.returncode
     if exit_code != 0:
-        print(f"Test failed with exit code {exit_code} [{code_folder_name}]")
+        print(f"Test failed with exit code {exit_code} [{code_folder}]")
         # write ".failed" to the code_folder_name
-        with open(os.path.join(code_folder_name, ".failed"), "w") as f:
+        with open(os.path.join(code_folder, ".failed"), "w") as f:
             f.write(f"{exit_code}")
         print("--------------------------------")
-        print(f"Fixing code... [{code_folder_name}]")
+        print(f"Fixing code... [{code_folder}]")
         # add the current folder to ITER_QUEUE
         if iter_config["depth"] < args.depth:
-            start_iteration = 0
+            iter_count = 0
             for _ in range(args.breadth):
-                while os.path.exists(os.path.join(code_folder_name, f"{start_iteration:02d}")):
-                    start_iteration += 1
+                while os.path.exists(os.path.join(code_folder, f"{iter_count:02d}")):
+                    iter_count += 1
                 # append start_iteration to ITER_QUEUE
-                child_config = {"parent": code_folder_name, "child": os.path.join(code_folder_name, f"{start_iteration:02d}"), "depth": iter_config["depth"] + 1}
+                child_config = {"parent": code_folder, "child": os.path.join(code_folder, f"{iter_count:02d}"), "depth": iter_config["depth"] + 1}
                 print(f"Adding {child_config} to ITER_QUEUE")
                 ITER_QUEUE.append(child_config)
-                start_iteration += 1
+                iter_count += 1
         print("--------------------------------")
     else:
-        print(f"Test passed with exit code {exit_code} [{code_folder_name}]")
+        print(f"Test passed with exit code {exit_code} [{code_folder}]")
         # write ".success" to the code_folder_name
-        with open(os.path.join(code_folder_name, ".success"), "w") as f:
+        with open(os.path.join(code_folder, ".success"), "w") as f:
             f.write(f"{exit_code}")
         print("--------------------------------")
         break
