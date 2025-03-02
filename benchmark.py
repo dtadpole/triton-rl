@@ -1,3 +1,5 @@
+# filename: benchmark.py
+
 import torch
 import triton
 import triton.testing
@@ -58,7 +60,7 @@ def verify_correctness(func_triton, func_torch, input_generator, dimensions, dev
     return passed, total
 
 
-def benchmark_performance(func_triton, func_torch, input_generator, dimensions, num_warmup=10, num_repeats=100, device='cuda', dtype=torch.float16):
+def benchmark_performance(func_triton, func_torch, input_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
     """
     Benchmarks the performance of the Triton implementation against PyTorch.
     """
