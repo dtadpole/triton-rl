@@ -87,7 +87,8 @@ FIX_PROMPTS = [
 TEST_CASES = {
 
     "softmax": """
-Generate triton code for softmax, test correctness and performance using following code literally:
+Generate triton code for softmax (filename: softmax_triton.py),
+    test correctness and performance using following code literally:
 ```python
     batch_sizes = [256, 512, 1024, 2048];
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096];
@@ -100,7 +101,8 @@ Generate triton code for softmax, test correctness and performance using followi
 """,
 
     "rmsnorm": """
-Generate triton code for RMSNorm, test correctness and performance using following code literally:
+Generate triton code for RMSNorm (filename: rmsnorm_triton.py),
+    test correctness and performance using following code literally:
 ```python
     batch_sizes = [256, 512, 1024, 2048];
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096];
@@ -115,7 +117,8 @@ Generate triton code for RMSNorm, test correctness and performance using followi
 """,
 
     "rmsnorm_with_linear": """
-Generate triton code for RMSNorm with Linear layer, test correctness and performance using following code literally:
+Generate triton code for RMSNorm with Linear layer (filename: rmsnorm_with_linear_triton.py),
+    test correctness and performance using following code literally:
 ```python
     batch_sizes = [256, 512, 1024, 2048];
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096];
@@ -130,7 +133,7 @@ Generate triton code for RMSNorm with Linear layer, test correctness and perform
 """,
 
     "matmul": """
-Generate triton code for Matrix Multiplication,
+Generate triton code for Matrix Multiplication (filename: matmul_triton.py).
     use autotune for block sizes (BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K), use super blocks and autotune GROUP_SIZE_M,
     test correctness and performance using following code literally:
 ```python
