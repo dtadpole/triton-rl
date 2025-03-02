@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_matmul/code_gen_deepseek_001/01/matmul_triton.py", line 121, in <module>
+    verify_correctness(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
+  File "/home/centos/triton-rl/func_matmul/code_gen_deepseek_001/01/benchmark.py", line 47, in verify_correctness
+    triton_output = func_triton(*inputs)
+                    ^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/func_matmul/code_gen_deepseek_001/01/matmul_triton.py", line 99, in generated_triton_func
+    matmul_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 345, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 156, in run
+    timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 101, in _bench
+    conflicts = meta.keys() & config.kwargs.keys()
+                              ^^^^^^^^^^^^^
+AttributeError: 'dict' object has no attribute 'kwargs'

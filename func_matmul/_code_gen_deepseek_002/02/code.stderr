@@ -1,0 +1,5 @@
+W0302 05:28:07.531000 627979 site-packages/torch/_dynamo/convert_frame.py:844] [0/8] torch._dynamo hit config.cache_size_limit (8)
+W0302 05:28:07.531000 627979 site-packages/torch/_dynamo/convert_frame.py:844] [0/8]    function: 'torch_matmul' (/home/centos/triton-rl/func_matmul/code_gen_deepseek_000/02/matmul_triton.py:121)
+W0302 05:28:07.531000 627979 site-packages/torch/_dynamo/convert_frame.py:844] [0/8]    last reason: 0/0: tensor 'L['A']' size mismatch at index 0. expected 512, actual 1024
+W0302 05:28:07.531000 627979 site-packages/torch/_dynamo/convert_frame.py:844] [0/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0302 05:28:07.531000 627979 site-packages/torch/_dynamo/convert_frame.py:844] [0/8] To diagnose recompilation issues, see https://pytorch.org/docs/main/torch.compiler_troubleshooting.html.

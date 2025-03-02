@@ -13,7 +13,7 @@ parser.add_argument("-a", "--api", type=str, default="deepseek")
 parser.add_argument("-d", "--dir", type=str, default=".")
 parser.add_argument("-s", "--start_iteration", type=int, default=0)
 parser.add_argument("-m", "--max_iterations", type=int, default=5)
-parser.add_argument("-x", "--fix_mode", type=bool, default=False, action="store_true")
+parser.add_argument("-x", "--fix_mode", type=bool, default=False)
 args = parser.parse_args()
 
 
@@ -45,8 +45,8 @@ for file in os.listdir(args.dir):
             f.write(content)
 
 ERR_MESSAGE = ""
-if os.path.exists(f"{subfolder_name}/code_stderr.log"):
-    with open(f"{subfolder_name}/code_stderr.log", "r") as f:
+if os.path.exists(f"{subfolder_name}/code.stderr"):
+    with open(f"{subfolder_name}/code.stderr", "r") as f:
         ERR_MESSAGE = f.read()
 
 FIX_MODE = args.fix_mode
@@ -93,7 +93,7 @@ for iteration in range(args.start_iteration, args.max_iterations):
     os.makedirs(code_folder_name, exist_ok=True)
 
     # write request_messages to log file
-    with open(f"{code_folder_name}/api_request.log", "w") as f:
+    with open(f"{code_folder_name}/api_request.json", "w") as f:
         f.write(json.dumps(request_messages, indent=4))
 
     response_message = API_ENDPOINTS[args.api](request_messages)
@@ -107,7 +107,7 @@ for iteration in range(args.start_iteration, args.max_iterations):
                 f.write(content)
 
     # write response to log file
-    with open(f"{code_folder_name}/api_response.log", "w") as f:
+    with open(f"{code_folder_name}/api_response.json", "w") as f:
         f.write(json.dumps(response_message, indent=4))
 
     with open(f"{code_folder_name}/api_response.md", "w") as f:
@@ -153,13 +153,13 @@ for iteration in range(args.start_iteration, args.max_iterations):
     process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
     OUTPUT_MESSAGE = process.stdout.decode('utf-8')
     if OUTPUT_MESSAGE != "":
-        with open(f"{code_folder_name}/code_stdout.log", "w") as f:
+        with open(f"{code_folder_name}/code.stdout", "w") as f:
             f.write(OUTPUT_MESSAGE)
     print(OUTPUT_MESSAGE)
     print("--------------------------------")
     ERR_MESSAGE = process.stderr.decode('utf-8')
     if ERR_MESSAGE != "":
-        with open(f"{code_folder_name}/code_stderr.log", "w") as f:
+        with open(f"{code_folder_name}/code.stderr", "w") as f:
             f.write(ERR_MESSAGE)
     print(ERR_MESSAGE)
     print("--------------------------------")
