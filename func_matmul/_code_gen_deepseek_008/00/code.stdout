@@ -1,0 +1,251 @@
+✅ Correctness test passed for shape ([256, 256, 256], torch.float16)
+✅ Correctness test passed for shape ([256, 256, 512], torch.float16)
+✅ Correctness test passed for shape ([256, 256, 1024], torch.float16)
+✅ Correctness test passed for shape ([256, 256, 2048], torch.float16)
+✅ Correctness test passed for shape ([256, 256, 4096], torch.float16)
+✅ Correctness test passed for shape ([256, 512, 256], torch.float16)
+✅ Correctness test passed for shape ([256, 512, 512], torch.float16)
+✅ Correctness test passed for shape ([256, 512, 1024], torch.float16)
+✅ Correctness test passed for shape ([256, 512, 2048], torch.float16)
+✅ Correctness test passed for shape ([256, 512, 4096], torch.float16)
+✅ Correctness test passed for shape ([256, 1024, 256], torch.float16)
+✅ Correctness test passed for shape ([256, 1024, 512], torch.float16)
+✅ Correctness test passed for shape ([256, 1024, 1024], torch.float16)
+✅ Correctness test passed for shape ([256, 1024, 2048], torch.float16)
+✅ Correctness test passed for shape ([256, 1024, 4096], torch.float16)
+✅ Correctness test passed for shape ([256, 2048, 256], torch.float16)
+✅ Correctness test passed for shape ([256, 2048, 512], torch.float16)
+✅ Correctness test passed for shape ([256, 2048, 1024], torch.float16)
+✅ Correctness test passed for shape ([256, 2048, 2048], torch.float16)
+✅ Correctness test passed for shape ([256, 2048, 4096], torch.float16)
+✅ Correctness test passed for shape ([256, 4096, 256], torch.float16)
+✅ Correctness test passed for shape ([256, 4096, 512], torch.float16)
+✅ Correctness test passed for shape ([256, 4096, 1024], torch.float16)
+✅ Correctness test passed for shape ([256, 4096, 2048], torch.float16)
+✅ Correctness test passed for shape ([256, 4096, 4096], torch.float16)
+✅ Correctness test passed for shape ([512, 256, 256], torch.float16)
+✅ Correctness test passed for shape ([512, 256, 512], torch.float16)
+✅ Correctness test passed for shape ([512, 256, 1024], torch.float16)
+✅ Correctness test passed for shape ([512, 256, 2048], torch.float16)
+✅ Correctness test passed for shape ([512, 256, 4096], torch.float16)
+✅ Correctness test passed for shape ([512, 512, 256], torch.float16)
+✅ Correctness test passed for shape ([512, 512, 512], torch.float16)
+✅ Correctness test passed for shape ([512, 512, 1024], torch.float16)
+✅ Correctness test passed for shape ([512, 512, 2048], torch.float16)
+✅ Correctness test passed for shape ([512, 512, 4096], torch.float16)
+✅ Correctness test passed for shape ([512, 1024, 256], torch.float16)
+✅ Correctness test passed for shape ([512, 1024, 512], torch.float16)
+✅ Correctness test passed for shape ([512, 1024, 1024], torch.float16)
+✅ Correctness test passed for shape ([512, 1024, 2048], torch.float16)
+✅ Correctness test passed for shape ([512, 1024, 4096], torch.float16)
+✅ Correctness test passed for shape ([512, 2048, 256], torch.float16)
+✅ Correctness test passed for shape ([512, 2048, 512], torch.float16)
+✅ Correctness test passed for shape ([512, 2048, 1024], torch.float16)
+✅ Correctness test passed for shape ([512, 2048, 2048], torch.float16)
+✅ Correctness test passed for shape ([512, 2048, 4096], torch.float16)
+✅ Correctness test passed for shape ([512, 4096, 256], torch.float16)
+✅ Correctness test passed for shape ([512, 4096, 512], torch.float16)
+✅ Correctness test passed for shape ([512, 4096, 1024], torch.float16)
+✅ Correctness test passed for shape ([512, 4096, 2048], torch.float16)
+✅ Correctness test passed for shape ([512, 4096, 4096], torch.float16)
+✅ Correctness test passed for shape ([1024, 256, 256], torch.float16)
+✅ Correctness test passed for shape ([1024, 256, 512], torch.float16)
+✅ Correctness test passed for shape ([1024, 256, 1024], torch.float16)
+✅ Correctness test passed for shape ([1024, 256, 2048], torch.float16)
+✅ Correctness test passed for shape ([1024, 256, 4096], torch.float16)
+✅ Correctness test passed for shape ([1024, 512, 256], torch.float16)
+✅ Correctness test passed for shape ([1024, 512, 512], torch.float16)
+✅ Correctness test passed for shape ([1024, 512, 1024], torch.float16)
+✅ Correctness test passed for shape ([1024, 512, 2048], torch.float16)
+✅ Correctness test passed for shape ([1024, 512, 4096], torch.float16)
+✅ Correctness test passed for shape ([1024, 1024, 256], torch.float16)
+✅ Correctness test passed for shape ([1024, 1024, 512], torch.float16)
+✅ Correctness test passed for shape ([1024, 1024, 1024], torch.float16)
+✅ Correctness test passed for shape ([1024, 1024, 2048], torch.float16)
+✅ Correctness test passed for shape ([1024, 1024, 4096], torch.float16)
+✅ Correctness test passed for shape ([1024, 2048, 256], torch.float16)
+✅ Correctness test passed for shape ([1024, 2048, 512], torch.float16)
+✅ Correctness test passed for shape ([1024, 2048, 1024], torch.float16)
+✅ Correctness test passed for shape ([1024, 2048, 2048], torch.float16)
+✅ Correctness test passed for shape ([1024, 2048, 4096], torch.float16)
+✅ Correctness test passed for shape ([1024, 4096, 256], torch.float16)
+✅ Correctness test passed for shape ([1024, 4096, 512], torch.float16)
+✅ Correctness test passed for shape ([1024, 4096, 1024], torch.float16)
+✅ Correctness test passed for shape ([1024, 4096, 2048], torch.float16)
+✅ Correctness test passed for shape ([1024, 4096, 4096], torch.float16)
+✅ Correctness test passed for shape ([2048, 256, 256], torch.float16)
+✅ Correctness test passed for shape ([2048, 256, 512], torch.float16)
+✅ Correctness test passed for shape ([2048, 256, 1024], torch.float16)
+✅ Correctness test passed for shape ([2048, 256, 2048], torch.float16)
+✅ Correctness test passed for shape ([2048, 256, 4096], torch.float16)
+✅ Correctness test passed for shape ([2048, 512, 256], torch.float16)
+✅ Correctness test passed for shape ([2048, 512, 512], torch.float16)
+✅ Correctness test passed for shape ([2048, 512, 1024], torch.float16)
+✅ Correctness test passed for shape ([2048, 512, 2048], torch.float16)
+✅ Correctness test passed for shape ([2048, 512, 4096], torch.float16)
+✅ Correctness test passed for shape ([2048, 1024, 256], torch.float16)
+✅ Correctness test passed for shape ([2048, 1024, 512], torch.float16)
+✅ Correctness test passed for shape ([2048, 1024, 1024], torch.float16)
+✅ Correctness test passed for shape ([2048, 1024, 2048], torch.float16)
+✅ Correctness test passed for shape ([2048, 1024, 4096], torch.float16)
+✅ Correctness test passed for shape ([2048, 2048, 256], torch.float16)
+✅ Correctness test passed for shape ([2048, 2048, 512], torch.float16)
+✅ Correctness test passed for shape ([2048, 2048, 1024], torch.float16)
+✅ Correctness test passed for shape ([2048, 2048, 2048], torch.float16)
+✅ Correctness test passed for shape ([2048, 2048, 4096], torch.float16)
+✅ Correctness test passed for shape ([2048, 4096, 256], torch.float16)
+✅ Correctness test passed for shape ([2048, 4096, 512], torch.float16)
+✅ Correctness test passed for shape ([2048, 4096, 1024], torch.float16)
+✅ Correctness test passed for shape ([2048, 4096, 2048], torch.float16)
+✅ Correctness test passed for shape ([2048, 4096, 4096], torch.float16)
+✅ Correctness test passed for shape ([4096, 256, 256], torch.float16)
+✅ Correctness test passed for shape ([4096, 256, 512], torch.float16)
+✅ Correctness test passed for shape ([4096, 256, 1024], torch.float16)
+✅ Correctness test passed for shape ([4096, 256, 2048], torch.float16)
+✅ Correctness test passed for shape ([4096, 256, 4096], torch.float16)
+✅ Correctness test passed for shape ([4096, 512, 256], torch.float16)
+✅ Correctness test passed for shape ([4096, 512, 512], torch.float16)
+✅ Correctness test passed for shape ([4096, 512, 1024], torch.float16)
+✅ Correctness test passed for shape ([4096, 512, 2048], torch.float16)
+✅ Correctness test passed for shape ([4096, 512, 4096], torch.float16)
+✅ Correctness test passed for shape ([4096, 1024, 256], torch.float16)
+✅ Correctness test passed for shape ([4096, 1024, 512], torch.float16)
+✅ Correctness test passed for shape ([4096, 1024, 1024], torch.float16)
+✅ Correctness test passed for shape ([4096, 1024, 2048], torch.float16)
+✅ Correctness test passed for shape ([4096, 1024, 4096], torch.float16)
+✅ Correctness test passed for shape ([4096, 2048, 256], torch.float16)
+✅ Correctness test passed for shape ([4096, 2048, 512], torch.float16)
+✅ Correctness test passed for shape ([4096, 2048, 1024], torch.float16)
+✅ Correctness test passed for shape ([4096, 2048, 2048], torch.float16)
+✅ Correctness test passed for shape ([4096, 2048, 4096], torch.float16)
+✅ Correctness test passed for shape ([4096, 4096, 256], torch.float16)
+✅ Correctness test passed for shape ([4096, 4096, 512], torch.float16)
+✅ Correctness test passed for shape ([4096, 4096, 1024], torch.float16)
+✅ Correctness test passed for shape ([4096, 4096, 2048], torch.float16)
+✅ Correctness test passed for shape ([4096, 4096, 4096], torch.float16)
+Shape: ([256, 256, 256], torch.float16), Triton: 6.1 us, PyTorch: 19.4 us, Speedup: 3.16x
+Shape: ([256, 256, 512], torch.float16), Triton: 9.2 us, PyTorch: 21.5 us, Speedup: 2.33x
+Shape: ([256, 256, 1024], torch.float16), Triton: 13.3 us, PyTorch: 24.6 us, Speedup: 1.85x
+Shape: ([256, 256, 2048], torch.float16), Triton: 23.6 us, PyTorch: 29.7 us, Speedup: 1.26x
+Shape: ([256, 256, 4096], torch.float16), Triton: 35.8 us, PyTorch: 38.9 us, Speedup: 1.09x
+Shape: ([256, 512, 256], torch.float16), Triton: 7.1 us, PyTorch: 20.5 us, Speedup: 2.90x
+Shape: ([256, 512, 512], torch.float16), Triton: 9.2 us, PyTorch: 22.5 us, Speedup: 2.44x
+Shape: ([256, 512, 1024], torch.float16), Triton: 14.6 us, PyTorch: 27.6 us, Speedup: 1.89x
+Shape: ([256, 512, 2048], torch.float16), Triton: 26.6 us, PyTorch: 37.9 us, Speedup: 1.42x
+Shape: ([256, 512, 4096], torch.float16), Triton: 41.8 us, PyTorch: 55.3 us, Speedup: 1.32x
+Shape: ([256, 1024, 256], torch.float16), Triton: 7.2 us, PyTorch: 23.6 us, Speedup: 3.29x
+Shape: ([256, 1024, 512], torch.float16), Triton: 10.2 us, PyTorch: 25.3 us, Speedup: 2.47x
+Shape: ([256, 1024, 1024], torch.float16), Triton: 14.3 us, PyTorch: 31.6 us, Speedup: 2.21x
+Shape: ([256, 1024, 2048], torch.float16), Triton: 23.6 us, PyTorch: 50.9 us, Speedup: 2.16x
+Shape: ([256, 1024, 4096], torch.float16), Triton: 42.0 us, PyTorch: 84.9 us, Speedup: 2.02x
+Shape: ([256, 2048, 256], torch.float16), Triton: 9.2 us, PyTorch: 24.6 us, Speedup: 2.67x
+Shape: ([256, 2048, 512], torch.float16), Triton: 13.3 us, PyTorch: 31.7 us, Speedup: 2.38x
+Shape: ([256, 2048, 1024], torch.float16), Triton: 20.4 us, PyTorch: 47.1 us, Speedup: 2.31x
+Shape: ([256, 2048, 2048], torch.float16), Triton: 37.9 us, PyTorch: 79.9 us, Speedup: 2.11x
+Shape: ([256, 2048, 4096], torch.float16), Triton: 68.8 us, PyTorch: 143.4 us, Speedup: 2.09x
+Shape: ([256, 4096, 256], torch.float16), Triton: 12.4 us, PyTorch: 31.7 us, Speedup: 2.57x
+Shape: ([256, 4096, 512], torch.float16), Triton: 19.5 us, PyTorch: 47.1 us, Speedup: 2.42x
+Shape: ([256, 4096, 1024], torch.float16), Triton: 33.8 us, PyTorch: 77.8 us, Speedup: 2.30x
+Shape: ([256, 4096, 2048], torch.float16), Triton: 64.4 us, PyTorch: 136.2 us, Speedup: 2.12x
+Shape: ([256, 4096, 4096], torch.float16), Triton: 120.4 us, PyTorch: 245.8 us, Speedup: 2.04x
+Shape: ([512, 256, 256], torch.float16), Triton: 7.2 us, PyTorch: 21.3 us, Speedup: 2.97x
+Shape: ([512, 256, 512], torch.float16), Triton: 10.2 us, PyTorch: 22.7 us, Speedup: 2.21x
+Shape: ([512, 256, 1024], torch.float16), Triton: 14.3 us, PyTorch: 27.6 us, Speedup: 1.93x
+Shape: ([512, 256, 2048], torch.float16), Triton: 24.6 us, PyTorch: 36.4 us, Speedup: 1.48x
+Shape: ([512, 256, 4096], torch.float16), Triton: 41.0 us, PyTorch: 55.3 us, Speedup: 1.35x
+Shape: ([512, 512, 256], torch.float16), Triton: 7.2 us, PyTorch: 22.1 us, Speedup: 3.09x
+Shape: ([512, 512, 512], torch.float16), Triton: 10.2 us, PyTorch: 10.0 us, Speedup: 0.97x
+Shape: ([512, 512, 1024], torch.float16), Triton: 15.4 us, PyTorch: 30.4 us, Speedup: 1.98x
+Shape: ([512, 512, 2048], torch.float16), Triton: 25.3 us, PyTorch: 47.1 us, Speedup: 1.86x
+Shape: ([512, 512, 4096], torch.float16), Triton: 43.0 us, PyTorch: 77.6 us, Speedup: 1.80x
+Shape: ([512, 1024, 256], torch.float16), Triton: 9.2 us, PyTorch: 25.6 us, Speedup: 2.78x
+Shape: ([512, 1024, 512], torch.float16), Triton: 12.3 us, PyTorch: 32.8 us, Speedup: 2.67x
+Shape: ([512, 1024, 1024], torch.float16), Triton: 20.5 us, PyTorch: 45.1 us, Speedup: 2.20x
+Shape: ([512, 1024, 2048], torch.float16), Triton: 36.9 us, PyTorch: 68.6 us, Speedup: 1.86x
+Shape: ([512, 1024, 4096], torch.float16), Triton: 67.6 us, PyTorch: 122.9 us, Speedup: 1.82x
+Shape: ([512, 2048, 256], torch.float16), Triton: 13.3 us, PyTorch: 29.0 us, Speedup: 2.18x
+Shape: ([512, 2048, 512], torch.float16), Triton: 19.1 us, PyTorch: 39.8 us, Speedup: 2.08x
+Shape: ([512, 2048, 1024], torch.float16), Triton: 33.8 us, PyTorch: 62.5 us, Speedup: 1.85x
+Shape: ([512, 2048, 2048], torch.float16), Triton: 63.5 us, PyTorch: 110.6 us, Speedup: 1.74x
+Shape: ([512, 2048, 4096], torch.float16), Triton: 115.7 us, PyTorch: 195.2 us, Speedup: 1.69x
+Shape: ([512, 4096, 256], torch.float16), Triton: 24.6 us, PyTorch: 38.9 us, Speedup: 1.58x
+Shape: ([512, 4096, 512], torch.float16), Triton: 37.9 us, PyTorch: 61.4 us, Speedup: 1.62x
+Shape: ([512, 4096, 1024], torch.float16), Triton: 63.5 us, PyTorch: 107.5 us, Speedup: 1.69x
+Shape: ([512, 4096, 2048], torch.float16), Triton: 114.7 us, PyTorch: 194.6 us, Speedup: 1.70x
+Shape: ([512, 4096, 4096], torch.float16), Triton: 222.2 us, PyTorch: 353.1 us, Speedup: 1.59x
+Shape: ([1024, 256, 256], torch.float16), Triton: 7.2 us, PyTorch: 22.6 us, Speedup: 3.15x
+Shape: ([1024, 256, 512], torch.float16), Triton: 9.4 us, PyTorch: 23.6 us, Speedup: 2.51x
+Shape: ([1024, 256, 1024], torch.float16), Triton: 15.9 us, PyTorch: 32.8 us, Speedup: 2.06x
+Shape: ([1024, 256, 2048], torch.float16), Triton: 24.6 us, PyTorch: 52.1 us, Speedup: 2.12x
+Shape: ([1024, 256, 4096], torch.float16), Triton: 44.0 us, PyTorch: 87.0 us, Speedup: 1.98x
+Shape: ([1024, 512, 256], torch.float16), Triton: 9.2 us, PyTorch: 24.6 us, Speedup: 2.68x
+Shape: ([1024, 512, 512], torch.float16), Triton: 12.0 us, PyTorch: 32.8 us, Speedup: 2.72x
+Shape: ([1024, 512, 1024], torch.float16), Triton: 19.5 us, PyTorch: 45.1 us, Speedup: 2.32x
+Shape: ([1024, 512, 2048], torch.float16), Triton: 35.8 us, PyTorch: 70.7 us, Speedup: 1.97x
+Shape: ([1024, 512, 4096], torch.float16), Triton: 68.6 us, PyTorch: 121.5 us, Speedup: 1.77x
+Shape: ([1024, 1024, 256], torch.float16), Triton: 11.3 us, PyTorch: 29.2 us, Speedup: 2.59x
+Shape: ([1024, 1024, 512], torch.float16), Triton: 18.4 us, PyTorch: 35.8 us, Speedup: 1.94x
+Shape: ([1024, 1024, 1024], torch.float16), Triton: 32.8 us, PyTorch: 38.9 us, Speedup: 1.19x
+Shape: ([1024, 1024, 2048], torch.float16), Triton: 62.5 us, PyTorch: 102.4 us, Speedup: 1.64x
+Shape: ([1024, 1024, 4096], torch.float16), Triton: 113.7 us, PyTorch: 181.2 us, Speedup: 1.59x
+Shape: ([1024, 2048, 256], torch.float16), Triton: 18.6 us, PyTorch: 37.9 us, Speedup: 2.03x
+Shape: ([1024, 2048, 512], torch.float16), Triton: 34.8 us, PyTorch: 54.3 us, Speedup: 1.56x
+Shape: ([1024, 2048, 1024], torch.float16), Triton: 63.5 us, PyTorch: 92.2 us, Speedup: 1.45x
+Shape: ([1024, 2048, 2048], torch.float16), Triton: 115.7 us, PyTorch: 169.0 us, Speedup: 1.46x
+Shape: ([1024, 2048, 4096], torch.float16), Triton: 222.2 us, PyTorch: 308.2 us, Speedup: 1.39x
+Shape: ([1024, 4096, 256], torch.float16), Triton: 41.0 us, PyTorch: 54.3 us, Speedup: 1.33x
+Shape: ([1024, 4096, 512], torch.float16), Triton: 67.6 us, PyTorch: 95.2 us, Speedup: 1.41x
+Shape: ([1024, 4096, 1024], torch.float16), Triton: 117.0 us, PyTorch: 162.8 us, Speedup: 1.39x
+Shape: ([1024, 4096, 2048], torch.float16), Triton: 221.3 us, PyTorch: 295.9 us, Speedup: 1.34x
+Shape: ([1024, 4096, 4096], torch.float16), Triton: 445.6 us, PyTorch: 557.1 us, Speedup: 1.25x
+Shape: ([2048, 256, 256], torch.float16), Triton: 8.2 us, PyTorch: 24.6 us, Speedup: 3.00x
+Shape: ([2048, 256, 512], torch.float16), Triton: 12.3 us, PyTorch: 31.7 us, Speedup: 2.58x
+Shape: ([2048, 256, 1024], torch.float16), Triton: 19.5 us, PyTorch: 48.1 us, Speedup: 2.47x
+Shape: ([2048, 256, 2048], torch.float16), Triton: 36.9 us, PyTorch: 79.9 us, Speedup: 2.17x
+Shape: ([2048, 256, 4096], torch.float16), Triton: 68.6 us, PyTorch: 140.3 us, Speedup: 2.04x
+Shape: ([2048, 512, 256], torch.float16), Triton: 12.3 us, PyTorch: 29.0 us, Speedup: 2.36x
+Shape: ([2048, 512, 512], torch.float16), Triton: 19.1 us, PyTorch: 39.9 us, Speedup: 2.09x
+Shape: ([2048, 512, 1024], torch.float16), Triton: 33.1 us, PyTorch: 61.5 us, Speedup: 1.86x
+Shape: ([2048, 512, 2048], torch.float16), Triton: 62.5 us, PyTorch: 109.6 us, Speedup: 1.75x
+Shape: ([2048, 512, 4096], torch.float16), Triton: 115.7 us, PyTorch: 195.6 us, Speedup: 1.69x
+Shape: ([2048, 1024, 256], torch.float16), Triton: 19.4 us, PyTorch: 38.8 us, Speedup: 2.00x
+Shape: ([2048, 1024, 512], torch.float16), Triton: 33.8 us, PyTorch: 55.3 us, Speedup: 1.64x
+Shape: ([2048, 1024, 1024], torch.float16), Triton: 63.5 us, PyTorch: 94.0 us, Speedup: 1.48x
+Shape: ([2048, 1024, 2048], torch.float16), Triton: 114.7 us, PyTorch: 169.1 us, Speedup: 1.47x
+Shape: ([2048, 1024, 4096], torch.float16), Triton: 219.1 us, PyTorch: 309.2 us, Speedup: 1.41x
+Shape: ([2048, 2048, 256], torch.float16), Triton: 35.8 us, PyTorch: 55.3 us, Speedup: 1.54x
+Shape: ([2048, 2048, 512], torch.float16), Triton: 65.5 us, PyTorch: 90.1 us, Speedup: 1.38x
+Shape: ([2048, 2048, 1024], torch.float16), Triton: 117.6 us, PyTorch: 152.6 us, Speedup: 1.30x
+Shape: ([2048, 2048, 2048], torch.float16), Triton: 220.8 us, PyTorch: 210.9 us, Speedup: 0.96x
+Shape: ([2048, 2048, 4096], torch.float16), Triton: 437.2 us, PyTorch: 530.4 us, Speedup: 1.21x
+Shape: ([2048, 4096, 256], torch.float16), Triton: 70.7 us, PyTorch: 91.3 us, Speedup: 1.29x
+Shape: ([2048, 4096, 512], torch.float16), Triton: 120.8 us, PyTorch: 150.5 us, Speedup: 1.25x
+Shape: ([2048, 4096, 1024], torch.float16), Triton: 226.3 us, PyTorch: 272.7 us, Speedup: 1.20x
+Shape: ([2048, 4096, 2048], torch.float16), Triton: 460.8 us, PyTorch: 505.9 us, Speedup: 1.10x
+Shape: ([2048, 4096, 4096], torch.float16), Triton: 960.5 us, PyTorch: 976.9 us, Speedup: 1.02x
+Shape: ([4096, 256, 256], torch.float16), Triton: 12.3 us, PyTorch: 31.7 us, Speedup: 2.58x
+Shape: ([4096, 256, 512], torch.float16), Triton: 20.2 us, PyTorch: 46.1 us, Speedup: 2.28x
+Shape: ([4096, 256, 1024], torch.float16), Triton: 33.8 us, PyTorch: 78.8 us, Speedup: 2.33x
+Shape: ([4096, 256, 2048], torch.float16), Triton: 64.5 us, PyTorch: 136.2 us, Speedup: 2.11x
+Shape: ([4096, 256, 4096], torch.float16), Triton: 119.8 us, PyTorch: 255.0 us, Speedup: 2.13x
+Shape: ([4096, 512, 256], torch.float16), Triton: 20.3 us, PyTorch: 38.9 us, Speedup: 1.91x
+Shape: ([4096, 512, 512], torch.float16), Triton: 35.8 us, PyTorch: 61.4 us, Speedup: 1.72x
+Shape: ([4096, 512, 1024], torch.float16), Triton: 64.7 us, PyTorch: 107.5 us, Speedup: 1.66x
+Shape: ([4096, 512, 2048], torch.float16), Triton: 116.7 us, PyTorch: 192.7 us, Speedup: 1.65x
+Shape: ([4096, 512, 4096], torch.float16), Triton: 223.2 us, PyTorch: 354.3 us, Speedup: 1.59x
+Shape: ([4096, 1024, 256], torch.float16), Triton: 35.8 us, PyTorch: 55.3 us, Speedup: 1.54x
+Shape: ([4096, 1024, 512], torch.float16), Triton: 66.6 us, PyTorch: 95.2 us, Speedup: 1.43x
+Shape: ([4096, 1024, 1024], torch.float16), Triton: 116.7 us, PyTorch: 162.8 us, Speedup: 1.39x
+Shape: ([4096, 1024, 2048], torch.float16), Triton: 223.2 us, PyTorch: 297.0 us, Speedup: 1.33x
+Shape: ([4096, 1024, 4096], torch.float16), Triton: 463.9 us, PyTorch: 558.1 us, Speedup: 1.20x
+Shape: ([4096, 2048, 256], torch.float16), Triton: 68.6 us, PyTorch: 90.1 us, Speedup: 1.31x
+Shape: ([4096, 2048, 512], torch.float16), Triton: 119.8 us, PyTorch: 150.5 us, Speedup: 1.26x
+Shape: ([4096, 2048, 1024], torch.float16), Triton: 225.3 us, PyTorch: 271.4 us, Speedup: 1.20x
+Shape: ([4096, 2048, 2048], torch.float16), Triton: 440.3 us, PyTorch: 507.9 us, Speedup: 1.15x
+Shape: ([4096, 2048, 4096], torch.float16), Triton: 904.7 us, PyTorch: 977.9 us, Speedup: 1.08x
+Shape: ([4096, 4096, 256], torch.float16), Triton: 130.0 us, PyTorch: 152.6 us, Speedup: 1.17x
+Shape: ([4096, 4096, 512], torch.float16), Triton: 234.5 us, PyTorch: 263.2 us, Speedup: 1.12x
+Shape: ([4096, 4096, 1024], torch.float16), Triton: 463.4 us, PyTorch: 483.3 us, Speedup: 1.04x
+Shape: ([4096, 4096, 2048], torch.float16), Triton: 891.9 us, PyTorch: 926.7 us, Speedup: 1.04x
+Shape: ([4096, 4096, 4096], torch.float16), Triton: 1836.2 us, PyTorch: 1852.4 us, Speedup: 1.01x
+Benchmark graph saved to benchmark.png
