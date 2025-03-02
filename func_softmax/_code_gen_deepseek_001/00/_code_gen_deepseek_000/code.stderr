@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_002/00/softmax_triton.py", line 89, in <module>
+    verify_correctness(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_002/00/benchmark.py", line 50, in verify_correctness
+    triton_output = func_triton(inputs)
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_002/00/softmax_triton.py", line 72, in triton_softmax
+    softmax_kernel[(n_rows,)](x, y, dim_size, BLOCK_SIZE=triton.next_power_of_two(dim_size))
+                                                         ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton' has no attribute 'next_power_of_two'. Did you mean: 'next_power_of_2'?
