@@ -46,11 +46,11 @@ friendly_endpoint = "https://api.friendli.ai/serverless/v1/chat/completions"
 friendly_model = "deepseek-r1"
 
 
-# deepseek_provider = {
-#     "url": fireworks_endpoint,
-#     "model": fireworks_model,
-#     "api_key": fireworks_api_key,
-# }
+deepseek_provider = {
+    "url": fireworks_endpoint,
+    "model": fireworks_model,
+    "api_key": fireworks_api_key,
+}
 
 deepseek_provider = {
     "url": friendly_endpoint,
