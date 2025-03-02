@@ -52,11 +52,11 @@ deepseek_provider = {
     "api_key": fireworks_api_key,
 }
 
-deepseek_provider = {
-    "url": friendly_endpoint,
-    "model": friendly_model,
-    "api_key": friendly_api_key,
-}
+# deepseek_provider = {
+#    "url": friendly_endpoint,
+#    "model": friendly_model,
+#    "api_key": friendly_api_key,
+# }
 
 # deepseek_provider = {
 #     "url": deepseek_endpoint,

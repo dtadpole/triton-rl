@@ -2,7 +2,7 @@
 import torch
 import triton
 import time
-from linear_triton import (
+from _test.linear_triton import (
     generated_triton_forward, generated_torch_forward,
     generated_triton_backward, generated_torch_backward
 )
