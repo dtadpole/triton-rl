@@ -73,16 +73,16 @@ def matmul_kernel(
     offs_k = tl.arange(0, BLOCK_SIZE_K)
     a_ptrs = a_ptr + (offs_m[:, None] * stride_am + offs_k[None, :] * stride_ak)
     b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_n[None, :] * stride_bn)
-    
+
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
-    
+
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_ptrs, mask=offs_k[None, :] < K - k, other=0.0)
         b = tl.load(b_ptrs, mask=offs_k[:, None] < K - k, other=0.0)
         accumulator += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk
-    
+
     c = accumulator.to(tl.float16)
     offs_cm = offs_m[:, None] * stride_cm + offs_n[None, :] * stride_cn
     c_ptrs = c_ptr + offs_cm
@@ -103,9 +103,9 @@ def generated_triton_func(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     M, K = A.shape
     K, N = B.shape
     C = torch.empty((M, N), device=A.device, dtype=A.dtype)
-    
+
     grid = lambda opt: (triton.cdiv(M, opt['BLOCK_SIZE_M']) * triton.cdiv(N, opt['BLOCK_SIZE_N']), )
-    
+
     matmul_kernel[grid](
         A, B, C,
         M, N, K,
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     M_sizes = [256, 1024, 4096]
     N_sizes = [256, 1024, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(M, N, K, device='cuda', dtype=torch.float16):
         A = torch.randn(M, K, device=device, dtype=dtype)
         A = torch.nn.functional.normalize(A, dim=-1)

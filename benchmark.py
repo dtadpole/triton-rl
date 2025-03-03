@@ -33,13 +33,11 @@ def generate_configs(dims):
     return configs
 
 
-def verify_correctness(func_triton, func_torch, input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
+def verify_correctness_func(func_triton, func_torch, input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
     """
     Verifies the correctness of the Triton implementation against PyTorch.
     """
     torch.manual_seed(seed)
-    passed = 0
-    total = 0
 
     device_name = torch.cuda.get_device_name(0)
 
@@ -80,13 +78,81 @@ def verify_correctness(func_triton, func_torch, input_generator, dimensions, dev
             })
 
         # write correctness results to file
+        with open("code.correctness.func.json", "w") as f:
+            f.write(json.dumps(correctness, indent=4))
+
+    return correctness
+
+
+def verify_correctness_forward(input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
+    """
+    Verify the forward pass of the TritonModule against the TorchModule.
+    """
+    torch.manual_seed(seed)
+
+    device_name = torch.cuda.get_device_name(0)
+
+    correctness = {
+        "passed": 0,
+        "failed": 0,
+        "total": 0,
+        "device": device_name,
+        "results": []
+    }
+
+    for config in generate_configs(dimensions):
+        # input generator returns params (for Module initialization) and inputs (for Module forward)
+        modules, inputs = input_generator(*config, device=device, dtype=dtype)
+        triton_module = modules[0]
+        torch_module = modules[1]
+        if isinstance(inputs, tuple):
+            triton_output = triton_module(*inputs)
+            torch_output = torch_module(*inputs)
+        else:
+            triton_output = triton_module(inputs)
+            torch_output = torch_module(inputs)
+
+        mismatch = False
+        if isinstance(torch_output, tuple):
+            for i in range(len(torch_output)):
+                if torch.allclose(triton_output[i], torch_output[i], atol=atol, rtol=rtol):
+                    pass
+                else:
+                    mismatch = True
+                    break
+        else:
+            if torch.allclose(triton_output, torch_output, atol=atol, rtol=rtol):
+                pass
+            else:
+                mismatch = True
+
+        if not mismatch:
+            print(f"✅ Correctness test passed for shape ({config}, {dtype})")
+            correctness["passed"] += 1
+            correctness["total"] += 1
+            correctness["results"].append({
+                "shape": config,
+                "dtype": str(dtype),
+                "correctness": True
+            })
+        else:
+            print(f"❌ Correctness test failed for shape ({config}, {dtype})")
+            correctness["failed"] += 1
+            correctness["total"] += 1
+            correctness["results"].append({
+                "shape": config,
+                "dtype": str(dtype),
+                "correctness": False
+            })
+
+        # write correctness results to file
         with open("code.correctness.json", "w") as f:
             f.write(json.dumps(correctness, indent=4))
 
     return correctness
 
 
-def benchmark_performance(func_triton, func_torch, input_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
+def benchmark_performance_func(func_triton, func_torch, input_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
     """
     Benchmarks the performance of the Triton implementation against PyTorch.
     """
@@ -138,7 +204,7 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
     performance["speedup"] = np.median(speedups)
 
     # write performance results to file
-    with open("code.performance.json", "w") as f:
+    with open("code.performance.func.json", "w") as f:
         f.write(json.dumps(performance, indent=4))
 
     # Graphing
@@ -164,7 +230,7 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
     ax2.legend(loc='upper right')
 
     fig.tight_layout()
-    graph_filename = "benchmark.png"
+    graph_filename = "code.performance.func.png"
     plt.savefig(graph_filename)
     print(f"Benchmark graph saved to {graph_filename}")
 
@@ -172,7 +238,7 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
     median_time_pytorch = np.median(timings_pytorch)
     median_speedup = np.median(speedups)
 
-    return median_time_triton, median_time_pytorch, median_speedup
+    return median_time_triton, median_time_pytorch, median_speedup, performance
 
 
 if __name__ == '__main__':
@@ -180,11 +246,11 @@ if __name__ == '__main__':
     batch_sizes = [16, 32, 64]
     dimensions = [128, 256, 512, 1024, 2048, 4096, 8192, 16384]
     # print(generate_configs([batch_sizes, dimensions, [0, 1, 2]]))
-    correct, total = verify_correctness(lambda x: torch.zeros(batch_sizes[0], dimensions[0]), lambda x: torch.zeros(batch_sizes[0], dimensions[0]), [batch_sizes, dimensions])
-    print(f"Correctness tests: {correct}/{total} passed")
+    correctness = verify_correctness_func(lambda x: torch.zeros(batch_sizes[0], dimensions[0]), lambda x: torch.zeros(batch_sizes[0], dimensions[0]), [batch_sizes, dimensions])
+    print(f"Correctness tests: {correctness['passed']}/{correctness['total']} passed")
 
     # Performance Test
     batch_sizes = [64, 128, 256]
     dimensions = [128, 256, 512, 1024, 2048, 4096, 8192, 16384]
-    median_triton, median_pytorch, speedup = benchmark_performance(lambda x: torch.zeros(batch_sizes[0], dimensions[0]), lambda x: torch.zeros(batch_sizes[0], dimensions[0]), [batch_sizes, dimensions])
+    median_triton, median_pytorch, speedup, performance = benchmark_performance_func(lambda x: torch.zeros(batch_sizes[0], dimensions[0]), lambda x: torch.zeros(batch_sizes[0], dimensions[0]), [batch_sizes, dimensions])
     print(f"Median performance - Triton: {median_triton:.4f} ms, PyTorch: {median_pytorch:.4f} ms, Speedup: {speedup:.2f}x")

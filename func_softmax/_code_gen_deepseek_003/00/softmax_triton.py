@@ -37,17 +37,17 @@ def softmax_kernel(
 
     input_row_ptr = input_ptr + row_idx * n_cols
     row = tl.load(input_row_ptr + col_offsets, mask=mask, other=-float('inf'))
-    
+
     # Step 1: Find row max
     row_max = tl.max(row, axis=0)
-    
+
     # Step 2: Subtract max and compute exp
     row_minus_max = row - row_max
     numerator = tl.exp(row_minus_max)
-    
+
     # Step 3: Compute sum of exponents
     denominator = tl.sum(numerator, axis=0)
-    
+
     # Step 4: Normalize and store
     softmax_output = numerator / denominator
     output_row_ptr = output_ptr + row_idx * n_cols
@@ -73,9 +73,9 @@ def softmax_triton(x: torch.Tensor) -> torch.Tensor:
     n_rows, n_cols = x.shape
     BLOCK_SIZE = triton.next_power_of_2(n_cols)
     BLOCK_SIZE = min(BLOCK_SIZE, 1024)  # Limit block size for register pressure
-    
+
     y = torch.empty_like(x)
-    
+
     grid = (n_rows,)
     softmax_kernel[grid](
         y, x, n_cols,
@@ -104,13 +104,13 @@ if __name__ == "__main__":
 
     batch_sizes = [256, 512, 1024, 2048]
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
         x = torch.randn(batch_size, dim_size, device=device, dtype=dtype)
         return x
-    
+
     # Test correctness
     verify_correctness(softmax_triton, softmax_torch, input_generator, [batch_sizes, dim_sizes])
-    
+
     # Benchmark performance
     benchmark_performance(softmax_triton, softmax_torch, input_generator, [batch_sizes, dim_sizes])

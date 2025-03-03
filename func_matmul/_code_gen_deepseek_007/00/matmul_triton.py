@@ -75,7 +75,7 @@ def matmul_kernel(
     b_ptrs = b_ptr + offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn
 
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
-    
+
     for k in range(0, K, BLOCK_SIZE_K * SUPER_BLOCK):
         a = tl.load(a_ptrs, mask=offs_k[None, :] < K - k, other=0.0)
         b = tl.load(b_ptrs, mask=offs_k[:, None] < K - k, other=0.0)
@@ -109,9 +109,9 @@ def matmul_triton(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     M, K = a.shape
     K, N = b.shape
     c = torch.empty((M, N), device=a.device, dtype=a.dtype)
-    
+
     grid = lambda opt: (triton.cdiv(M, opt['BLOCK_SIZE_M']) * triton.cdiv(N, opt['BLOCK_SIZE_N']), )
-    
+
     matmul_kernel[grid](
         a, b, c,
         M, N, K,
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     generated_triton_func = lambda A, B: matmul_triton(A, B)
     generated_torch_func = lambda A, B: torch.matmul(A, B)
 
-    verify_correctness(generated_triton_func, generated_torch_func, 
+    verify_correctness(generated_triton_func, generated_torch_func,
                       input_generator, [M_sizes, N_sizes, K_sizes])
     benchmark_performance(generated_triton_func, generated_torch_func,
                          input_generator, [M_sizes, N_sizes, K_sizes])

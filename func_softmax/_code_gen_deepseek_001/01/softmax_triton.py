@@ -36,12 +36,12 @@ def softmax_kernel(
 
     input_ptrs = input_ptr + row_idx * n_cols + col_offsets
     row = tl.load(input_ptrs, mask=mask, other=-float('inf'))
-    
+
     row_minus_max = row - tl.max(row, axis=0)
     numerator = tl.exp(row_minus_max)
     denominator = tl.sum(numerator, axis=0)
     softmax_output = numerator / denominator
-    
+
     output_ptrs = output_ptr + row_idx * n_cols + col_offsets
     tl.store(output_ptrs, softmax_output, mask=mask)
 
@@ -92,9 +92,9 @@ def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
 
 if __name__ == "__main__":
     from benchmark import verify_correctness, benchmark_performance
-    
+
     batch_sizes = [256, 512, 1024, 2048]
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    
+
     verify_correctness(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])
     benchmark_performance(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])

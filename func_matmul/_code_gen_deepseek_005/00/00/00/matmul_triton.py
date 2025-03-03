@@ -125,7 +125,7 @@ if __name__ == "__main__":
     M_sizes = [256, 512, 1024, 2048, 4096]
     N_sizes = [256, 512, 1024, 2048, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(M, N, K, device='cuda', dtype=torch.float16):
         A = torch.randn(M, K, device=device, dtype=dtype)
         A = torch.nn.functional.normalize(A, dim=-1)

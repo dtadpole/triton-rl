@@ -140,6 +140,6 @@ def input_generator(M, N, K, device='cuda', dtype=torch.float16):
 
 if __name__ == "__main__":
     from benchmark import verify_correctness, benchmark_performance
-    
+
     verify_correctness(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])
     benchmark_performance(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])

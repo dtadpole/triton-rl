@@ -81,7 +81,7 @@ def matmul_kernel(
         block_shape=(BLOCK_SIZE_M, BLOCK_SIZE_K),
         order=(1, 0)
     )
-    
+
     b_block_ptr = tl.make_block_ptr(
         base=b_ptr,
         shape=(K, N),
@@ -92,7 +92,7 @@ def matmul_kernel(
     )
 
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
-    
+
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_block_ptr, boundary_check=(0, 1))
         b = tl.load(b_block_ptr, boundary_check=(0, 1))
@@ -101,7 +101,7 @@ def matmul_kernel(
         b_block_ptr = tl.advance(b_block_ptr, (BLOCK_SIZE_K, 0))
 
     c = accumulator.to(tl.float16)
-    
+
     c_block_ptr = tl.make_block_ptr(
         base=c_ptr,
         shape=(M, N),
@@ -151,17 +151,17 @@ def matmul_torch(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
 
 if __name__ == "__main__":
     from benchmark import verify_correctness, benchmark_performance
-    
+
     M_sizes = [256, 1024, 4096]
     N_sizes = [256, 1024, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(M, N, K, device='cuda', dtype=torch.float16):
         A = torch.randn(M, K, device=device, dtype=dtype)
         A = F.normalize(A, dim=-1)
         B = torch.randn(K, N, device=device, dtype=dtype)
         B = F.normalize(B, dim=-1)
         return A, B
-    
+
     verify_correctness(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])
     benchmark_performance(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])

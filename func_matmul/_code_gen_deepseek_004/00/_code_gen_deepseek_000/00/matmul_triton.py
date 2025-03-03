@@ -71,7 +71,7 @@ def matmul_kernel(
     offs_k = tl.arange(0, BLOCK_SIZE_K)
     a_ptrs = a_ptr + (offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak)
     b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn)
-    
+
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_ptrs, mask=(offs_k[None, :] < K - k), other=0.0)
@@ -79,7 +79,7 @@ def matmul_kernel(
         accumulator += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk
-    
+
     c = accumulator.to(tl.float16)
     offs_cm = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
     offs_cn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
@@ -109,8 +109,8 @@ def matmul_triton(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     K, N = b.shape
     c = torch.empty((M, N), device=a.device, dtype=a.dtype)
     grid = lambda opt: (triton.cdiv(M, opt.BLOCK_SIZE_M) * triton.cdiv(N, opt.BLOCK_SIZE_N), )
-    matmul_kernel[grid](a, b, c, M, N, K, 
-                        a.stride(0), a.stride(1), 
+    matmul_kernel[grid](a, b, c, M, N, K,
+                        a.stride(0), a.stride(1),
                         b.stride(0), b.stride(1),
                         c.stride(0), c.stride(1))
     return c

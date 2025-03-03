@@ -1,5 +1,5 @@
 # filename: benchmark.py
-
+import json
 import torch
 import torch.nn as nn
 import triton
@@ -36,25 +36,6 @@ def generate_configs(dims):
 
     return configs
 
-
-def verify_forward(TritonModule, TorchModule):
-    # torch.manual_seed(0)
-    in_features = 512
-    out_features = 2048
-    batch_size = 768
-    x = torch.randn(batch_size, in_features, device='cuda', dtype=torch.float16)
-    x = torch.nn.functional.normalize(x, dim=1)
-
-    linear_torch = torch.nn.Linear(in_features, out_features, bias=False, device='cuda', dtype=torch.float16)
-    linear_triton = TritonModule(in_features, out_features, device='cuda', dtype=torch.float16)
-    linear_triton.reset_parameters(linear_torch.weight)
-
-    y_triton = linear_triton(x)
-    y_pytorch = linear_torch(x)
-    if torch.allclose(y_triton, y_pytorch, rtol=1e-2, atol=1e-2):
-        print("✅ Forward pass passed!")
-    else:
-        print("❌ Forward pass failed!")
 
 def verify_backward(TritonModule, TorchModule):
     # torch.manual_seed(0)

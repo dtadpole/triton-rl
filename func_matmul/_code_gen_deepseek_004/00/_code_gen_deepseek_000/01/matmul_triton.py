@@ -124,17 +124,17 @@ def matmul_torch(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
 
 if __name__ == "__main__":
     from benchmark import verify_correctness, benchmark_performance
-    
+
     M_sizes = [256, 512, 1024, 2048, 4096]
     N_sizes = [256, 512, 1024, 2048, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(M, N, K, device='cuda', dtype=torch.float16):
         A = torch.randn(M, K, device=device, dtype=dtype)
         A = torch.nn.functional.normalize(A, dim=-1)
         B = torch.randn(K, N, device=device, dtype=dtype)
         B = torch.nn.functional.normalize(B, dim=-1)
         return A, B
-    
+
     verify_correctness(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])
     benchmark_performance(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])

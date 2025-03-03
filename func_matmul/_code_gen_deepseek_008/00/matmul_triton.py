@@ -71,21 +71,21 @@ def matmul_kernel(
     offs_m = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
     offs_n = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
     offs_k = tl.arange(0, BLOCK_SIZE_K)
-    
+
     a_ptrs = a_ptr + (offs_m[:, None] * stride_am + offs_k[None, :] * stride_ak)
     b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_n[None, :] * stride_bn)
-    
+
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
-    
+
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_ptrs, mask=(offs_m[:, None] < M) & (offs_k[None, :] < K - k), other=0.0)
         b = tl.load(b_ptrs, mask=(offs_k[:, None] < K - k) & (offs_n[None, :] < N), other=0.0)
         accumulator += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk
-    
+
     c = accumulator.to(tl.float16)
-    
+
     offs_cm = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
     offs_cn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
     c_ptrs = c_ptr + (offs_cm[:, None] * stride_cm + offs_cn[None, :] * stride_cn)
@@ -113,9 +113,9 @@ def matmul_triton(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     M, K = A.shape
     K, N = B.shape
     C = torch.empty((M, N), device=A.device, dtype=A.dtype)
-    
+
     grid = lambda meta: (triton.cdiv(M, meta['BLOCK_SIZE_M']) * triton.cdiv(N, meta['BLOCK_SIZE_N']),)
-    
+
     matmul_kernel[grid](
         A, B, C,
         M, N, K,
@@ -130,17 +130,17 @@ def generated_torch_func(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
 
 if __name__ == "__main__":
     from benchmark import verify_correctness, benchmark_performance
-    
+
     M_sizes = [256, 512, 1024, 2048, 4096]
     N_sizes = [256, 512, 1024, 2048, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(M, N, K, device='cuda', dtype=torch.float16):
         A = torch.randn(M, K, device=device, dtype=dtype)
         A = torch.nn.functional.normalize(A, dim=-1)
         B = torch.randn(K, N, device=device, dtype=dtype)
         B = torch.nn.functional.normalize(B, dim=-1)
         return A, B
-    
+
     verify_correctness(matmul_triton, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
     benchmark_performance(matmul_triton, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])

@@ -103,9 +103,9 @@ def matmul_triton(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     M, K = a.shape
     K, N = b.shape
     c = torch.empty((M, N), device=a.device, dtype=a.dtype)
-    
+
     grid = lambda opt: (triton.cdiv(M, opt['BLOCK_SIZE_M']) * triton.cdiv(N, opt['BLOCK_SIZE_N']),)
-    
+
     matmul_kernel[grid](
         a, b, c,
         M, N, K,
@@ -130,12 +130,12 @@ if __name__ == "__main__":
         B = torch.nn.functional.normalize(B, dim=-1)
         return A, B
 
-    verify_correctness(matmul_triton, 
-                      lambda a, b: torch.matmul(a, b), 
-                      input_generator, 
+    verify_correctness(matmul_triton,
+                      lambda a, b: torch.matmul(a, b),
+                      input_generator,
                       [M_sizes, N_sizes, K_sizes])
-    
-    benchmark_performance(matmul_triton, 
-                         lambda a, b: torch.matmul(a, b), 
-                         input_generator, 
+
+    benchmark_performance(matmul_triton,
+                         lambda a, b: torch.matmul(a, b),
+                         input_generator,
                          [M_sizes, N_sizes, K_sizes])

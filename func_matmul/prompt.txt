@@ -2,6 +2,7 @@ Generate triton code for Matrix Multiplication (filename: matmul_triton.py)
     use autotune for block sizes (BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K), use super blocks and autotune GROUP_SIZE_M,
     test correctness and performance using following code literally:
 ```python
+if __name__ == "__main__":
     M_sizes = [256, 1024, 4096]
     N_sizes = [256, 1024, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
@@ -11,6 +12,8 @@ Generate triton code for Matrix Multiplication (filename: matmul_triton.py)
         B = torch.randn(K, N, device=device, dtype=dtype)
         B = torch.nn.functional.normalize(B, dim=-1)
         return A, B
-    verify_correctness(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
-    benchmark_performance(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
+
+    from benchmark import verify_correctness_func, benchmark_performance_func
+    verify_correctness_func(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
+    benchmark_performance_func(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
 ```

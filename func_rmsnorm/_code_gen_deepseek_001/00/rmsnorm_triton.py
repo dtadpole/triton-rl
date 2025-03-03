@@ -38,13 +38,13 @@ def rmsnorm_kernel(
     row = tl.program_id(0)
     x_ptrs = x_ptr + row * stride_xm + tl.arange(0, BLOCK_SIZE)
     w_ptrs = w_ptr + tl.arange(0, BLOCK_SIZE)
-    
+
     # Initialize sum and load pointers
     sum_squares = 0.0
     for offset in range(0, N, BLOCK_SIZE):
         cols = offset + tl.arange(0, BLOCK_SIZE)
         mask = cols < N
-        
+
         x = tl.load(x_ptrs + cols * stride_yn, mask=mask, other=0.0)
         x_sq = x * x
         sum_squares += tl.sum(x_sq, axis=0)
@@ -57,11 +57,11 @@ def rmsnorm_kernel(
     for offset in range(0, N, BLOCK_SIZE):
         cols = offset + tl.arange(0, BLOCK_SIZE)
         mask = cols < N
-        
+
         x = tl.load(x_ptrs + cols * stride_yn, mask=mask)
         w = tl.load(w_ptrs + cols, mask=mask)
         y = x * rms * w
-        
+
         tl.store(y_ptr + row * stride_yn + cols * stride_yn, y, mask=mask)
 
 def rmsnorm_triton(x: torch.Tensor, weight: torch.Tensor, eps: float = 1e-5) -> torch.Tensor:
@@ -85,15 +85,15 @@ def rmsnorm_triton(x: torch.Tensor, weight: torch.Tensor, eps: float = 1e-5) -> 
     assert x.dim() == 2, "Input must be 2D tensor"
     M, N = x.shape
     y = torch.empty_like(x)
-    
+
     BLOCK_SIZE = triton.next_power_of_2(N)
     if BLOCK_SIZE > 4096:
         BLOCK_SIZE = 4096
-    
+
     num_warps = 4
     if BLOCK_SIZE >= 2048:
         num_warps = 8
-    
+
     rmsnorm_kernel[(M,)](
         x, weight, y,
         x.stride(0), y.stride(1),
@@ -129,12 +129,12 @@ if __name__ == "__main__":
 
     batch_sizes = [256, 512, 1024, 2048]
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
         x = torch.randn(batch_size, dim_size, device=device, dtype=dtype)
         weight = torch.randn(dim_size, device=device, dtype=dtype)
         eps = 1e-5
         return x, weight, eps
-    
+
     verify_correctness(rmsnorm_triton, rmsnorm_torch, input_generator, [batch_sizes, dim_sizes])
     benchmark_performance(rmsnorm_triton, rmsnorm_torch, input_generator, [batch_sizes, dim_sizes])

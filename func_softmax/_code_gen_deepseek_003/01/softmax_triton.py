@@ -42,7 +42,7 @@ def softmax_kernel(
     row_max = tl.max(x, axis=0)
     x_minus_max = x - row_max
     exp_x = tl.exp(x_minus_max)
-    
+
     row_sum = tl.sum(exp_x, axis=0)
     y = exp_x / row_sum
 
@@ -68,13 +68,13 @@ def softmax_triton(x: torch.Tensor) -> torch.Tensor:
     """
     n_rows, n_cols = x.shape
     BLOCK_SIZE = triton.next_power_of_2(n_cols)
-    
+
     num_warps = 4
     if BLOCK_SIZE >= 2048:
         num_warps = 8
     elif BLOCK_SIZE >= 1024:
         num_warps = 8
-    
+
     y = torch.empty_like(x)
     softmax_kernel[(n_rows,)](
         x, y, n_cols,

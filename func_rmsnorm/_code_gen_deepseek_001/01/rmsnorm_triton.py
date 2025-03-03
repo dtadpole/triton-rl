@@ -79,7 +79,7 @@ def rmsnorm_triton(x: torch.Tensor, weight: torch.Tensor, eps: float) -> torch.T
     grid = (B,)
     BLOCK_SIZE = triton.next_power_of_2(D)
     BLOCK_SIZE = min(BLOCK_SIZE, 4096)  # Cap block size for register limits
-    
+
     _rmsnorm_kernel[grid](
         x, output, weight,
         D,
@@ -119,6 +119,6 @@ def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
 if __name__ == "__main__":
     batch_sizes = [256, 512, 1024, 2048]
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    
+
     verify_correctness(rmsnorm_triton, rmsnorm_torch, input_generator, [batch_sizes, dim_sizes])
     benchmark_performance(rmsnorm_triton, rmsnorm_torch, input_generator, [batch_sizes, dim_sizes])

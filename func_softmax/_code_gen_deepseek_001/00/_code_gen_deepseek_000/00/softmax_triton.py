@@ -38,7 +38,7 @@ def softmax_kernel(
     numerator = tl.exp(x_minus_max)
     denominator = tl.sum(numerator, axis=0)
     softmax_output = numerator / denominator
-    
+
     tl.store(y_ptr + offsets, softmax_output, mask=mask)
 
 def triton_softmax(x: torch.Tensor) -> torch.Tensor:
@@ -60,10 +60,10 @@ def triton_softmax(x: torch.Tensor) -> torch.Tensor:
     assert x.dim() == 2, "Input must be 2D tensor"
     n_rows, dim_size = x.shape
     y = torch.empty_like(x)
-    
+
     BLOCK_SIZE = triton.next_power_of_2(dim_size)
     grid = (n_rows,)
-    
+
     softmax_kernel[grid](x, y, dim_size, BLOCK_SIZE=BLOCK_SIZE)
     return y
 
@@ -88,6 +88,6 @@ def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
 
 if __name__ == "__main__":
     from benchmark import verify_correctness, benchmark_performance
-    
+
     verify_correctness(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])
     benchmark_performance(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])

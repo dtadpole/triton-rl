@@ -71,16 +71,16 @@ def matmul_kernel(
     offs_k = tl.arange(0, BLOCK_SIZE_K)
     a_ptrs = a_ptr + (offs_m[:, None] * stride_am + offs_k[None, :] * stride_ak)
     b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_n[None, :] * stride_bn)
-    
+
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
-    
+
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_ptrs, mask=(offs_k[None, :] < K - k), other=0.0)
         b = tl.load(b_ptrs, mask=(offs_k[:, None] < K - k), other=0.0)
         accumulator += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk
-    
+
     c_ptrs = c_ptr + (offs_m[:, None] * stride_cm + offs_n[None, :] * stride_cn)
     mask = (offs_m[:, None] < M) & (offs_n[None, :] < N)
     tl.store(c_ptrs, accumulator.to(tl.float16), mask=mask)
@@ -88,20 +88,20 @@ def matmul_kernel(
 def generated_triton_func(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     """
     Wrapper function for Triton matrix multiplication kernel.
-    
+
     Args:
         a (torch.Tensor): Input tensor A of shape (M, K)
         b (torch.Tensor): Input tensor B of shape (K, N)
-    
+
     Returns:
         torch.Tensor: Output tensor C of shape (M, N)
     """
     M, K = a.shape
     K, N = b.shape
     c = torch.empty((M, N), device=a.device, dtype=a.dtype)
-    
+
     grid = lambda opt: (triton.cdiv(M, opt.BLOCK_SIZE_M) * triton.cdiv(N, opt.BLOCK_SIZE_N), )
-    
+
     matmul_kernel[grid](
         a, b, c,
         M, N, K,
@@ -114,11 +114,11 @@ def generated_triton_func(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
 def generated_torch_func(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     """
     PyTorch implementation of matrix multiplication for verification.
-    
+
     Args:
         a (torch.Tensor): Input tensor A of shape (M, K)
         b (torch.Tensor): Input tensor B of shape (K, N)
-    
+
     Returns:
         torch.Tensor: Output tensor C of shape (M, N)
     """

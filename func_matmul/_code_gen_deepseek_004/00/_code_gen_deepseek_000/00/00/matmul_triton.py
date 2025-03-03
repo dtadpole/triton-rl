@@ -112,8 +112,8 @@ if __name__ == "__main__":
     M_sizes = [256, 512, 1024, 2048, 4096]
     N_sizes = [256, 512, 1024, 2048, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
-    
+
     from benchmark import verify_correctness, benchmark_performance
-    
+
     verify_correctness(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])
     benchmark_performance(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])

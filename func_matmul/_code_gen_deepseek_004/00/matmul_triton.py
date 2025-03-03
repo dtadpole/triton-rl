@@ -39,7 +39,7 @@ def matmul_kernel(
 ):
     """
     Computes matrix multiplication C = A @ B using Triton with autotuning.
-    
+
     Args:
         a_ptr (triton.Pointer): Pointer to matrix A of shape (M, K)
         b_ptr (triton.Pointer): Pointer to matrix B of shape (K, N)
@@ -57,10 +57,10 @@ def matmul_kernel(
         BLOCK_SIZE_N (tl.constexpr): Tile size for N dimension
         BLOCK_SIZE_K (tl.constexpr): Tile size for K dimension
         GROUP_SIZE_M (tl.constexpr): Number of M blocks to group together
-    
+
     Returns:
         None: Output is stored in c_ptr
-    
+
     Explanation:
         1. Calculate program ID and corresponding block indices for C matrix
         2. Create block pointers for A and B matrices with proper offsets
@@ -83,7 +83,7 @@ def matmul_kernel(
     offs_m = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
     offs_n = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
     offs_k = tl.arange(0, BLOCK_SIZE_K)
-    
+
     a_block_ptr = tl.make_block_ptr(
         base=a_ptr,
         shape=(M, K),
@@ -100,9 +100,9 @@ def matmul_kernel(
         block_shape=(BLOCK_SIZE_K, BLOCK_SIZE_N),
         order=(0, 1)
     )
-    
+
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
-    
+
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_block_ptr, boundary_check=(0, 1))
         b = tl.load(b_block_ptr, boundary_check=(1, 0))
@@ -111,7 +111,7 @@ def matmul_kernel(
         accumulator += tl.dot(a, b)
         a_block_ptr = tl.advance(a_block_ptr, (0, BLOCK_SIZE_K))
         b_block_ptr = tl.advance(b_block_ptr, (BLOCK_SIZE_K, 0))
-    
+
     c_block_ptr = tl.make_block_ptr(
         base=c_ptr,
         shape=(M, N),
@@ -125,14 +125,14 @@ def matmul_kernel(
 def matmul_triton(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     """
     Triton implementation of matrix multiplication.
-    
+
     Args:
         A (torch.Tensor): Input matrix of shape (M, K)
         B (torch.Tensor): Input matrix of shape (K, N)
-    
+
     Returns:
         torch.Tensor: Output matrix of shape (M, N)
-    
+
     Explanation:
         1. Validate input dimensions
         2. Preallocate output tensor C
@@ -161,14 +161,14 @@ def matmul_triton(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
 def matmul_torch(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     """
     PyTorch reference implementation of matrix multiplication.
-    
+
     Args:
         A (torch.Tensor): Input matrix of shape (M, K)
         B (torch.Tensor): Input matrix of shape (K, N)
-    
+
     Returns:
         torch.Tensor: Output matrix of shape (M, N)
-    
+
     Explanation:
         1. Directly uses torch.matmul for computation
     """

@@ -1,16 +1,20 @@
-Generate Triton module nn.linear (filename: linear_triton.py)
-    use autotune for block sizes (BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K), use super blocks and autotune GROUP_SIZE_M,
+Generate Triton module for PyTorch nn.linear, implement both forward and backward. (filename: linear_triton.py)
+    use autotune for block sizes (BLOCK_SIZE_B, BLOCK_SIZE_I, BLOCK_SIZE_O)
     test correctness and performance using following code literally:
 ```python
-    M_sizes = [256, 512, 1024, 2048, 4096]
-    N_sizes = [256, 512, 1024, 2048, 4096]
-    K_sizes = [256, 512, 1024, 2048, 4096]
-    def input_generator(M, N, K, device='cuda', dtype=torch.float16):
-        A = torch.randn(M, K, device=device, dtype=dtype)
-        A = torch.nn.functional.normalize(A, dim=-1)
-        B = torch.randn(K, N, device=device, dtype=dtype)
-        B = torch.nn.functional.normalize(B, dim=-1)
-        return A, B
-    verify_correctness(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
-    benchmark_performance(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
+    B_sizes = [256, 1024, 4096]
+    I_sizes = [256, 1024, 4096]
+    O_sizes = [256, 1024, 4096]
+    def input_generator(B, I, O, TritonModule, device='cuda', dtype=torch.float16):
+        input = torch.randn(B, I, device=device, dtype=dtype)
+        input = torch.nn.functional.normalize(input, dim=-1)
+        torch_module = torch.nn.Linear(I, O, bias=False, device=device, dtype=dtype)
+        triton_module = TritonModule(I, O, device='cuda', dtype=torch.float16)
+        triton_module.copy_parameters(torch_module.weight)
+        return (triton_module, torch_module), input
+
+    verify_correctness_forward(input_generator, [B_sizes, I_sizes, O_sizes])
+    verify_correctness_backward(input_generator, [B_sizes, I_sizes, O_sizes])
+    benchmark_performance_forward(input_generator, [B_sizes, I_sizes, O_sizes])
+    benchmark_performance_backward(input_generator, [B_sizes, I_sizes, O_sizes])
 ```

@@ -29,7 +29,7 @@ def softmax_kernel(output_ptr, input_ptr, input_row_stride, output_row_stride, n
     row_idx = tl.program_id(0)
     row_start = row_idx * input_row_stride
     col_offsets = tl.arange(0, BLOCK_SIZE)
-    
+
     # Find row max
     max_val = -float('inf')
     for block_start in range(0, n_cols, BLOCK_SIZE):
@@ -79,7 +79,7 @@ def triton_softmax(x: torch.Tensor) -> torch.Tensor:
     BLOCK_SIZE = triton.next_power_of_2(n_cols)
     BLOCK_SIZE = min(BLOCK_SIZE, 1024)
     num_warps = 8 if BLOCK_SIZE >= 512 else 4
-    
+
     y = torch.empty_like(x)
     softmax_kernel[(n_rows,)](y, x, x.stride(0), y.stride(0), n_cols, BLOCK_SIZE=BLOCK_SIZE, num_warps=num_warps)
     return y
@@ -99,11 +99,11 @@ def torch_softmax(x: torch.Tensor) -> torch.Tensor:
 if __name__ == "__main__":
     batch_sizes = [256, 512, 1024, 2048]
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
         return torch.randn(batch_size, dim_size, device=device, dtype=dtype)
-    
+
     from benchmark import verify_correctness, benchmark_performance
-    
+
     verify_correctness(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])
     benchmark_performance(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])

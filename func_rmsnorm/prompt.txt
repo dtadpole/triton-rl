@@ -8,6 +8,7 @@ Generate triton code for RMSNorm (filename: rmsnorm_triton.py),
         weight = torch.randn(dim_size, device=device, dtype=dtype)
         eps = 1e-5
         return x, weight, eps
-    verify_correctness(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
-    benchmark_performance(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
+    from benchmark import verify_correctness_func, benchmark_performance_func
+    verify_correctness_func(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
+    benchmark_performance_func(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
 ```

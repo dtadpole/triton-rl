@@ -1,0 +1,12 @@
+Generate triton code for softmax (filename: softmax_triton.py),
+    test correctness and performance using following code literally:
+```python
+    batch_sizes = [256, 512, 1024, 2048];
+    dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096];
+    def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
+        x = torch.randn(batch_size, dim_size, device=device, dtype=dtype)
+        return x
+    from benchmark import verify_correctness_func, benchmark_performance_func
+    verify_correctness_func(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
+    benchmark_performance_func(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes]);
+```

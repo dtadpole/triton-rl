@@ -108,9 +108,9 @@ def triton_matmul(A: torch.Tensor, B: torch.Tensor) -> torch.Tensor:
     M, K = A.shape
     K, N = B.shape
     C = torch.empty((M, N), device=A.device, dtype=A.dtype)
-    
+
     grid = lambda opt: (triton.cdiv(M, opt.BLOCK_SIZE_M) * triton.cdiv(N, opt.BLOCK_SIZE_N),)
-    
+
     matmul_kernel[grid](
         A, B, C,
         M, N, K,
@@ -136,11 +136,11 @@ def input_generator(M, N, K, device='cuda', dtype=torch.float16):
 
 if __name__ == "__main__":
     # Test correctness and benchmark performance
-    verify_correctness(triton_matmul, 
-                      lambda A, B: A @ B, 
+    verify_correctness(triton_matmul,
+                      lambda A, B: A @ B,
                       input_generator,
                       [M_sizes, N_sizes, K_sizes])
-    
+
     benchmark_performance(triton_matmul,
                          lambda A, B: A @ B,
                          input_generator,

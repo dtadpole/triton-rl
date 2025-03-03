@@ -40,7 +40,7 @@ def rmsnorm_kernel(
     """
     pid = tl.program_id(0)
     row_start = pid * stride_x_batch
-    
+
     # Compute sum of squares
     sum_squares = tl.zeros((1,), dtype=tl.float32)
     for offset in range(0, dim_size, BLOCK_SIZE):
@@ -48,11 +48,11 @@ def rmsnorm_kernel(
         mask = col_idx < dim_size
         x = tl.load(x_ptr + row_start + col_idx * stride_x_dim, mask=mask, other=0.0)
         sum_squares += tl.sum(x * x, axis=0)
-    
+
     # Calculate RMS
     rms_val = tl.sqrt(sum_squares / dim_size + eps)
     inv_rms = 1.0 / rms_val
-    
+
     # Apply normalization and weights
     for offset in range(0, dim_size, BLOCK_SIZE):
         col_idx = offset + tl.arange(0, BLOCK_SIZE)
@@ -118,12 +118,12 @@ def rmsnorm_torch(x: torch.Tensor, weight: torch.Tensor, eps: float) -> torch.Te
 if __name__ == "__main__":
     batch_sizes = [256, 512, 1024, 2048]
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
         x = torch.randn(batch_size, dim_size, device=device, dtype=dtype)
         weight = torch.randn(dim_size, device=device, dtype=dtype)
         eps = 1e-5
         return x, weight, eps
-    
+
     verify_correctness(rmsnorm_triton, rmsnorm_torch, input_generator, [batch_sizes, dim_sizes])
     benchmark_performance(rmsnorm_triton, rmsnorm_torch, input_generator, [batch_sizes, dim_sizes])

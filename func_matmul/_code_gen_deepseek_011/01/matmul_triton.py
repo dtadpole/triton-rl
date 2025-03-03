@@ -76,7 +76,7 @@ def matmul_kernel(
     offs_k = tl.arange(0, BLOCK_SIZE_K)
     a_ptrs = a_ptr + (offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak)
     b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn)
-    
+
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_ptrs, mask=offs_k[None, :] < K - k, other=0.0)
@@ -84,7 +84,7 @@ def matmul_kernel(
         accumulator += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk
-    
+
     c_ptrs = c_ptr + stride_cm * offs_am[:, None] + stride_cn * offs_bn[None, :]
     tl.store(c_ptrs, accumulator.to(c_ptr.dtype.element_ty), mask=(offs_am[:, None] < M) & (offs_bn[None, :] < N))
 
@@ -109,9 +109,9 @@ def matmul_triton(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     M, K = a.shape
     K, N = b.shape
     c = torch.zeros((M, N), device=a.device, dtype=a.dtype)
-    
+
     grid = lambda META: (triton.cdiv(M, META['BLOCK_SIZE_M']) * triton.cdiv(N, META['BLOCK_SIZE_N']),)
-    
+
     matmul_kernel[grid](
         a, b, c,
         M, N, K,

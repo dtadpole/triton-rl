@@ -26,7 +26,7 @@ def matmul_kernel(
 ):
     """
     Performs matrix multiplication using Triton with auto-tuned block configurations.
-    
+
     Args:
         a_ptr (tl.pointer): Pointer to input matrix A. Shape (M, K)
         b_ptr (tl.pointer): Pointer to input matrix B. Shape (K, N)
@@ -71,18 +71,18 @@ def matmul_kernel(
     offs_k = tl.arange(0, BLOCK_SIZE_K)
     a_ptrs = a_ptr + (offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak)
     b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn)
-    
+
     accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
-    
+
     for k in range(0, K, BLOCK_SIZE_K):
         a = tl.load(a_ptrs, mask=offs_k[None, :] < K - k, other=0.0)
         b = tl.load(b_ptrs, mask=offs_k[:, None] < K - k, other=0.0)
         accumulator += tl.dot(a, b)
         a_ptrs += BLOCK_SIZE_K * stride_ak
         b_ptrs += BLOCK_SIZE_K * stride_bk
-    
+
     c = accumulator.to(tl.float16)
-    
+
     offs_cm = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
     offs_cn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
     c_ptrs = c_ptr + (offs_cm[:, None] * stride_cm + offs_cn[None, :] * stride_cn)
@@ -92,7 +92,7 @@ def matmul_kernel(
 def matmul_triton(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     """
     Wrapper function for Triton matrix multiplication kernel.
-    
+
     Args:
         a (torch.Tensor): Input matrix A. Shape (M, K)
         b (torch.Tensor): Input matrix B. Shape (K, N)
@@ -104,9 +104,9 @@ def matmul_triton(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     M, K = a.shape
     K, N = b.shape
     c = torch.empty((M, N), device=a.device, dtype=a.dtype)
-    
+
     grid = lambda opt: (triton.cdiv(M, opt.BLOCK_SIZE_M) * triton.cdiv(N, opt.BLOCK_SIZE_N), )
-    
+
     matmul_kernel[grid](
         a, b, c,
         M, N, K,
@@ -130,17 +130,17 @@ def input_generator(M, N, K, device='cuda', dtype=torch.float16):
 
 if __name__ == '__main__':
     from benchmark import verify_correctness, benchmark_performance
-    
+
     # Define reference implementation
     torch_matmul = lambda a, b: torch.matmul(a, b)
-    
+
     verify_correctness(
         matmul_triton,
         torch_matmul,
         input_generator,
         [M_sizes, N_sizes, K_sizes]
     )
-    
+
     benchmark_performance(
         matmul_triton,
         torch_matmul,

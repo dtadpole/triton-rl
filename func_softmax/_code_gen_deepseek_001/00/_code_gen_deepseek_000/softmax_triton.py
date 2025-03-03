@@ -13,7 +13,7 @@ import triton.language as tl
 )
 @triton.jit
 def softmax_kernel(
-    input_ptr, output_ptr, 
+    input_ptr, output_ptr,
     dim_size: tl.constexpr,
     BLOCK_SIZE: tl.constexpr
 ):
@@ -38,7 +38,7 @@ def softmax_kernel(
     """
     row_idx = tl.program_id(0)
     col_offsets = tl.arange(0, BLOCK_SIZE)
-    
+
     # Step 1: Find row max for numerical stability
     row_max = tl.full((1,), float('-inf'), tl.float32)
     for offset in range(0, dim_size, BLOCK_SIZE):
@@ -46,7 +46,7 @@ def softmax_kernel(
         mask = cols < dim_size
         val = tl.load(input_ptr + row_idx * dim_size + cols, mask=mask, other=float('-inf'))
         row_max = tl.maximum(row_max, tl.max(val, 0))
-    
+
     # Step 2: Compute exp(x - max) and sum
     sum_exp = tl.zeros((1,), tl.float32)
     for offset in range(0, dim_size, BLOCK_SIZE):
@@ -56,7 +56,7 @@ def softmax_kernel(
         exp_val = tl.exp(val - row_max)
         tl.store(output_ptr + row_idx * dim_size + cols, exp_val, mask=mask)
         sum_exp += tl.sum(exp_val, 0)
-    
+
     # Step 3: Normalize by sum_exp
     for offset in range(0, dim_size, BLOCK_SIZE):
         cols = offset + col_offsets
@@ -78,13 +78,13 @@ def torch_softmax(x: torch.Tensor) -> torch.Tensor:
 
 if __name__ == "__main__":
     from benchmark import verify_correctness, benchmark_performance
-    
+
     batch_sizes = [256, 512, 1024, 2048]
     dim_sizes = [64, 128, 256, 512, 1024, 2048, 4096]
-    
+
     def input_generator(batch_size, dim_size, device='cuda', dtype=torch.float16):
         x = torch.randn(batch_size, dim_size, device=device, dtype=dtype)
         return x
-    
+
     verify_correctness(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])
     benchmark_performance(triton_softmax, torch_softmax, input_generator, [batch_sizes, dim_sizes])

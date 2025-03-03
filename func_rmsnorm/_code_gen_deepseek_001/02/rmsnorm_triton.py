@@ -53,7 +53,7 @@ def _rms_norm_fwd(
     for offset in range(0, n_cols, BLOCK_SIZE):
         cols = offset + tl.arange(0, BLOCK_SIZE)
         mask = cols < n_cols
-        
+
         x = tl.load(x_batch_ptr + cols * stride_x_col, mask=mask, other=0.0).to(tl.float32)
         sum_x_sq += tl.sum(x * x, axis=0)
 
@@ -64,10 +64,10 @@ def _rms_norm_fwd(
     for offset in range(0, n_cols, BLOCK_SIZE):
         cols = offset + tl.arange(0, BLOCK_SIZE)
         mask = cols < n_cols
-        
+
         x = tl.load(x_batch_ptr + cols * stride_x_col, mask=mask, other=0.0).to(tl.float32)
         weight = tl.load(weight_ptr + cols * stride_weight, mask=mask, other=0.0).to(tl.float32)
-        
+
         output = x * rsqrt_var * weight
         tl.store(output_batch_ptr + cols * stride_output_col, output.to(tl.float16), mask=mask)
 
@@ -95,10 +95,10 @@ def rms_norm_triton(x: torch.Tensor, weight: torch.Tensor, eps: float = 1e-5) ->
 
     batch, dim = x.shape
     BLOCK_SIZE = min(triton.next_power_of_2(dim), 1024)
-    
+
     output = torch.empty_like(x)
     grid = (batch,)
-    
+
     _rms_norm_fwd[grid](
         x, output, weight, eps, dim,
         x.stride(0), x.stride(1),
