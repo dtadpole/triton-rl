@@ -41,10 +41,13 @@ def verify_correctness(func_triton, func_torch, input_generator, dimensions, dev
     passed = 0
     total = 0
 
+    device_name = torch.cuda.get_device_name(0)
+
     correctness = {
         "passed": 0,
         "failed": 0,
         "total": 0,
+        "device": device_name,
         "results": []
     }
 
@@ -98,8 +101,11 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
     timings_pytorch = []
     speedups = []
 
+    device_name = torch.cuda.get_device_name(0)
+
     performance = {
         "speedup": 0.0,
+        "device": device_name,
         "results": []
     }
 
