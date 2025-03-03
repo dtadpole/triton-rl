@@ -5,7 +5,7 @@ import triton
 import triton.testing
 import numpy as np
 import matplotlib.pyplot as plt
-
+import json
 
 # dims is a list of possible dimensions
 # e.g. dims = [[16, 32], [128, 256, 512], [256, 512, 1024, 2048]]
@@ -41,6 +41,13 @@ def verify_correctness(func_triton, func_torch, input_generator, dimensions, dev
     passed = 0
     total = 0
 
+    correctness = {
+        "passed": 0,
+        "failed": 0,
+        "total": 0,
+        "results": []
+    }
+
     for config in generate_configs(dimensions):
         inputs = input_generator(*config, device=device, dtype=dtype)
         if isinstance(inputs, tuple):
@@ -52,12 +59,28 @@ def verify_correctness(func_triton, func_torch, input_generator, dimensions, dev
 
         if torch.allclose(triton_output, torch_output, atol=atol, rtol=rtol):
             print(f"✅ Correctness test passed for shape ({config}, {dtype})")
-            passed += 1
+            correctness["passed"] += 1
+            correctness["total"] += 1
+            correctness["results"].append({
+                "shape": config,
+                "dtype": dtype,
+                "correctness": True
+            })
         else:
             print(f"❌ Correctness test failed for shape ({config}, {dtype})")
-        total += 1
+            correctness["failed"] += 1
+            correctness["total"] += 1
+            correctness["results"].append({
+                "shape": config,
+                "dtype": dtype,
+                "correctness": False
+            })
 
-    return passed, total
+        # write correctness results to file
+        with open("code.correctness.json", "w") as f:
+            f.write(json.dumps(correctness, indent=4))
+
+    return correctness
 
 
 def benchmark_performance(func_triton, func_torch, input_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
@@ -74,6 +97,11 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
     timings_triton = []
     timings_pytorch = []
     speedups = []
+
+    performance = {
+        "speedup": 0.0,
+        "results": []
+    }
 
     for config in configs:
         inputs = input_generator(*config, device=device, dtype=dtype)
@@ -92,6 +120,20 @@ def benchmark_performance(func_triton, func_torch, input_generator, dimensions, 
         speedups.append(speedup)
 
         print(f"Shape: ({config}, {dtype}), Triton: {time_triton:.1f} us, PyTorch: {time_pytorch:.1f} us, Speedup: {speedup:.2f}x")
+
+        performance["results"].append({
+            "shape": config,
+            "dtype": dtype,
+            "triton_time": time_triton,
+            "pytorch_time": time_pytorch,
+            "speedup": speedup
+        })
+
+    performance["speedup"] = np.median(speedups)
+
+    # write performance results to file
+    with open("code.performance.json", "w") as f:
+        f.write(json.dumps(performance, indent=4))
 
     # Graphing
     fig, ax1 = plt.subplots(figsize=(12, 6))
