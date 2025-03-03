@@ -2,8 +2,8 @@ Generate triton code for Matrix Multiplication (filename: matmul_triton.py)
     use autotune for block sizes (BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K), use super blocks and autotune GROUP_SIZE_M,
     test correctness and performance using following code literally:
 ```python
-    M_sizes = [256, 512, 1024, 2048, 4096]
-    N_sizes = [256, 512, 1024, 2048, 4096]
+    M_sizes = [256, 1024, 4096]
+    N_sizes = [256, 1024, 4096]
     K_sizes = [256, 512, 1024, 2048, 4096]
     def input_generator(M, N, K, device='cuda', dtype=torch.float16):
         A = torch.randn(M, K, device=device, dtype=dtype)

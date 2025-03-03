@@ -224,6 +224,7 @@ async def processor(args, queue, id, timeout=1):
 
     print("--------------------------------")
     print(f"Processor {id} finished")
+    print("--------------------------------")
 
 async def main(args):
 
