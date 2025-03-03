@@ -2,32 +2,15 @@ import os
 import datetime
 import subprocess
 import json
+import asyncio
 from google import genai
 from google.genai import types
-from prompts import BASE_PROMPTS, FIX_PROMPTS
+from prompts import FUNC_BASE_PROMPTS, FIX_PROMPTS
 from gen_code_api import API_ENDPOINTS
 import argparse
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-a", "--api", type=str, default="deepseek")
-parser.add_argument("-d", "--dir", type=str, default=".")
-parser.add_argument("-b", "--breadth", type=int, default=3)
-parser.add_argument("-t", "--depth", type=int, default=3)
-args = parser.parse_args()
-
-if not os.path.exists(args.dir):
-    print(f"Directory {args.dir} does not exist")
-    exit(1)
-
-if not os.path.exists(os.path.join(args.dir, "prompt.txt")):
-    print(f"Prompt file {os.path.join(args.dir, "prompt.txt")} does not exist")
-    exit(1)
-
-INPUT_PROMPT = open(os.path.join(args.dir, "prompt.txt")).read()
+SUCCESS = False
 TEST_COMMAND = ""
-if os.path.exists(os.path.join(args.dir, "test.command")):
-    with open(os.path.join(args.dir, "test.command"), "r") as f:
-        TEST_COMMAND = f.read()
 
 def get_folder_name(args):
     # get the next sequence id
@@ -46,27 +29,24 @@ def get_folder_name(args):
                 f.write(content)
     return folder_name
 
-folder_name = get_folder_name(args)
 
-# ITER_QUEUE is a list of parent and child folders
-def initialize_iter_queue(args, folder_name):
-    ITER_QUEUE = []
-    # find start_iteration by checking folder names in start_folder_name
+# queue is a list of parent and child folders
+async def initialize_queue(args, folder_name, queue):
+    # find start_iteration by checking folder names in folder_name
     start_iteration = 0
     for _ in range(args.breadth):
         while os.path.exists(os.path.join(folder_name, f"{start_iteration:02d}")):
             start_iteration += 1
-        # append start_iteration to ITER_QUEUE
+        # append start_iteration to queue
         child_config = {"parent": folder_name, "child": os.path.join(folder_name, f"{start_iteration:02d}"), "depth": 0}
-        print(f"Adding {child_config} to ITER_QUEUE")
-        ITER_QUEUE.append(child_config)
+        print(f"Adding {child_config} to queue")
+        await queue.put(child_config)
         start_iteration += 1
-    return ITER_QUEUE
 
-ITER_QUEUE = initialize_iter_queue(args, folder_name)
 
-def codegen_messages(folder_name):
-    messages = BASE_PROMPTS + [
+def codegen_messages(args, folder_name):
+    INPUT_PROMPT = open(os.path.join(args.dir, "prompt.txt")).read()
+    messages = FUNC_BASE_PROMPTS + [
         {
             "role": "user",
             "content": INPUT_PROMPT,
@@ -83,8 +63,8 @@ def codegen_messages(folder_name):
     # return messages
     return messages
 
-def fix_messages(folder_name, err_message):
-    messages = codegen_messages(folder_name) + FIX_PROMPTS + [
+def fix_messages(args, folder_name, err_message):
+    messages = codegen_messages(args, folder_name) + FIX_PROMPTS + [
         {
             "role": "user",
             "content": f"Error Message: {err_message}",
@@ -93,134 +73,196 @@ def fix_messages(folder_name, err_message):
     return messages
 
 
-# WHILE ITER_QUEUE is not empty
-while len(ITER_QUEUE) > 0:
-    # pop the first item from ITER_QUEUE
+async def processor(args, queue, id, timeout=1):
+
+    global SUCCESS
+    global TEST_COMMAND
+
     print("--------------------------------")
-    iter_config = ITER_QUEUE.pop(0)
-    print(f"Processing {iter_config}")
-    print("--------------------------------")
+    print(f"Processor {id} started")
 
-    base_folder = iter_config["parent"]
-    code_folder = iter_config["child"]
+    # while not SUCCESS
+    while not SUCCESS:
+        # pop the first item from queue
+        print("--------------------------------")
+        try:
+            iter_config = await asyncio.wait_for(queue.get(), timeout)
+            # add the current folder to queue
+            print(f"Processing {iter_config}")
+            print("--------------------------------")
+            if iter_config["depth"] < args.depth:
+                iter_count = 0
+                for _ in range(args.breadth):
+                    while os.path.exists(os.path.join(iter_config["child"], f"{iter_count:02d}")):
+                        iter_count += 1
+                    # append start_iteration to queue
+                    child_config = {"parent": iter_config["child"], "child": os.path.join(iter_config["child"], f"{iter_count:02d}"), "depth": iter_config["depth"] + 1}
+                    print(f"Adding {child_config} to queue")
+                    await queue.put(child_config)
+                    iter_count += 1
+                print("--------------------------------")
+        except asyncio.TimeoutError:
+            # check if queue is empty
+            if queue.empty():
+                break
+            else:
+                continue
 
-    # ERR_MESSAGE is the error message from the last iteration
-    ERR_MESSAGE = ""
-    if os.path.exists(os.path.join(base_folder, "code.stderr")):
-        with open(os.path.join(base_folder, "code.stderr"), "r") as f:
-            ERR_MESSAGE = f.read()
+        base_folder = iter_config["parent"]
+        code_folder = iter_config["child"]
 
-    # if there is a .failed file, set FIX_MODE to True
-    if os.path.exists(os.path.join(iter_config["parent"], ".failed")):
-        FIX_MODE = True
-        request_messages = fix_messages(iter_config["parent"], ERR_MESSAGE)
-    else:
-        FIX_MODE = False
-        request_messages = codegen_messages(iter_config["parent"])
+        # ERR_MESSAGE is the error message from the last iteration
+        ERR_MESSAGE = ""
+        if os.path.exists(os.path.join(base_folder, "code.stderr")):
+            with open(os.path.join(base_folder, "code.stderr"), "r") as f:
+                ERR_MESSAGE = f.read()
 
-    # create a folder for the code and logs, starts with code_gen_<timestamp>
-    code_folder = iter_config["child"]
-    os.makedirs(code_folder, exist_ok=True)
-
-    # write request_messages to log file
-    with open(os.path.join(code_folder, "api_request.json"), "w") as f:
-        f.write(json.dumps(request_messages, indent=4))
-
-    response_message = API_ENDPOINTS[args.api](request_messages)
-
-    # for all files that named "prompt.txt" or ending with ".py" in the init_code_folder_name, read the content and write to code_folder_name
-    for file in os.listdir(iter_config["parent"]):
-        if file == "prompt.txt" or file.endswith(".py"):
-            with open(os.path.join(iter_config["parent"], file), "r") as f:
-                content = f.read()
-            with open(os.path.join(code_folder, file), "w") as f:
-                f.write(content)
-
-    # write response to log file
-    with open(os.path.join(code_folder, "api_response.json"), "w") as f:
-        f.write(json.dumps(response_message, indent=4))
-
-    with open(os.path.join(code_folder, "api_response.md"), "w") as f:
-        f.write(f"API: {args.api}\n")
-        f.write(f"Test Case: {args.dir}\n")
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        f.write(f"Timestamp: {timestamp}\n\n")
-
-        if "content" in response_message:
-            # if response_message has a "reasoner-content" key, write it to the log file
-            if "reasoning_content" in response_message and response_message["reasoning_content"]:
-                f.write("<think>\n")
-                f.write(response_message["reasoning_content"])
-                f.write("\n</think>\n")
-
-            f.write(response_message["content"])
+        # if there is a .failed file, set FIX_MODE to True
+        if os.path.exists(os.path.join(iter_config["parent"], ".failed")):
+            FIX_MODE = True
+            request_messages = fix_messages(args, iter_config["parent"], ERR_MESSAGE)
         else:
+            FIX_MODE = False
+            request_messages = codegen_messages(args, iter_config["parent"])
+
+        # create a folder for the code and logs, starts with code_gen_<timestamp>
+        code_folder = iter_config["child"]
+        os.makedirs(code_folder, exist_ok=True)
+
+        # write request_messages to log file
+        with open(os.path.join(code_folder, "api_request.json"), "w") as f:
+            f.write(json.dumps(request_messages, indent=4))
+
+        response_message = await API_ENDPOINTS[args.api](request_messages)
+
+        # for all files that named "prompt.txt" or ending with ".py" in the init_code_folder_name, read the content and write to code_folder_name
+        for file in os.listdir(iter_config["parent"]):
+            if file == "prompt.txt" or file.endswith(".py"):
+                with open(os.path.join(iter_config["parent"], file), "r") as f:
+                    content = f.read()
+                with open(os.path.join(code_folder, file), "w") as f:
+                    f.write(content)
+
+        # write response to log file
+        with open(os.path.join(code_folder, "api_response.json"), "w") as f:
             f.write(json.dumps(response_message, indent=4))
 
-    # match response.text with regex and extract the code blocks
-    import re
+        with open(os.path.join(code_folder, "api_response.md"), "w") as f:
+            f.write(f"API: {args.api}\n")
+            f.write(f"Test Case: {args.dir}\n")
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            f.write(f"Timestamp: {timestamp}\n\n")
 
-    code_blocks = re.findall(r'```python\n(.*?)```', response_message['content'], re.DOTALL)
+            if "content" in response_message:
+                # if response_message has a "reasoner-content" key, write it to the log file
+                if "reasoning_content" in response_message and response_message["reasoning_content"]:
+                    f.write("<think>\n")
+                    f.write(response_message["reasoning_content"])
+                    f.write("\n</think>\n")
 
-    # print(code_blocks)
-    # write the code blocks to files
-    for code_block in code_blocks:
-        filename = code_block.split("\n")[0].split("# filename: ")[1]
-        print(f"writing file: {os.path.join(code_folder, filename)}")
-        with open(os.path.join(code_folder, filename), "w") as f:
-            f.write(code_block)
+                f.write(response_message["content"])
+            else:
+                f.write(json.dumps(response_message, indent=4))
 
-    # extract test commands from response.text
-    test_commands = re.findall(r'.*?```bash\n(.*?)```.*?', response_message['content'], re.DOTALL)
-    # get the first test command if available
-    if len(test_commands) > 0:
-        TEST_COMMAND = test_commands[0].strip()
-        # write test command to log file
-        with open(os.path.join(code_folder, "test.command"), "w") as f:
-            f.write(TEST_COMMAND)
-    cmd = f"bash -c 'cd {code_folder} && {TEST_COMMAND}'"
-    print("--------------------------------")
-    print(cmd)
-    print("--------------------------------")
-    # run command and print output and error separately, use subprocess.run
-    process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
-    STDOUT_MESSAGE = process.stdout.decode('utf-8')
-    if STDOUT_MESSAGE != "":
-        with open(os.path.join(code_folder, "code.stdout"), "w") as f:
-            f.write(STDOUT_MESSAGE)
-    print(STDOUT_MESSAGE)
-    print("--------------------------------")
-    STDERR_MESSAGE = process.stderr.decode('utf-8')
-    if STDERR_MESSAGE != "":
-        with open(os.path.join(code_folder, "code.stderr"), "w") as f:
-            f.write(STDERR_MESSAGE)
-    print(STDERR_MESSAGE)
-    print("--------------------------------")
-    # get the exit code
-    exit_code = process.returncode
-    if exit_code != 0:
-        print(f"Test failed with exit code {exit_code} [{code_folder}]")
-        # write ".failed" to the code_folder_name
-        with open(os.path.join(code_folder, ".failed"), "w") as f:
-            f.write(f"{exit_code}")
+        # match response.text with regex and extract the code blocks
+        import re
+
+        code_blocks = re.findall(r'```python\n(.*?)```', response_message['content'], re.DOTALL)
+
+        # print(code_blocks)
+        # write the code blocks to files
+        for code_block in code_blocks:
+            filename = code_block.split("\n")[0].split("# filename: ")[1]
+            print(f"writing file: {os.path.join(code_folder, filename)}")
+            with open(os.path.join(code_folder, filename), "w") as f:
+                f.write(code_block)
+
+        # extract test commands from response.text
+        test_commands = re.findall(r'.*?```bash\n(.*?)```.*?', response_message['content'], re.DOTALL)
+        # get the first test command if available
+        if len(test_commands) > 0:
+            TEST_COMMAND = test_commands[0].strip()
+            # write test command to log file
+            with open(os.path.join(code_folder, "test.command"), "w") as f:
+                f.write(TEST_COMMAND)
+        cmd = f"bash -c 'cd {code_folder} && {TEST_COMMAND}'"
         print("--------------------------------")
-        print(f"Fixing code... [{code_folder}]")
-        # add the current folder to ITER_QUEUE
-        if iter_config["depth"] < args.depth:
-            iter_count = 0
-            for _ in range(args.breadth):
-                while os.path.exists(os.path.join(code_folder, f"{iter_count:02d}")):
-                    iter_count += 1
-                # append start_iteration to ITER_QUEUE
-                child_config = {"parent": code_folder, "child": os.path.join(code_folder, f"{iter_count:02d}"), "depth": iter_config["depth"] + 1}
-                print(f"Adding {child_config} to ITER_QUEUE")
-                ITER_QUEUE.append(child_config)
-                iter_count += 1
+        print(cmd)
         print("--------------------------------")
-    else:
-        print(f"Test passed with exit code {exit_code} [{code_folder}]")
-        # write ".success" to the code_folder_name
-        with open(os.path.join(code_folder, ".success"), "w") as f:
-            f.write(f"{exit_code}")
+        # run command and print output and error separately, use subprocess.run
+        process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
+        STDOUT_MESSAGE = process.stdout.decode('utf-8')
+        if STDOUT_MESSAGE != "":
+            with open(os.path.join(code_folder, "code.stdout"), "w") as f:
+                f.write(STDOUT_MESSAGE)
+        print(STDOUT_MESSAGE)
         print("--------------------------------")
-        break
+        STDERR_MESSAGE = process.stderr.decode('utf-8')
+        if STDERR_MESSAGE != "":
+            with open(os.path.join(code_folder, "code.stderr"), "w") as f:
+                f.write(STDERR_MESSAGE)
+        print(STDERR_MESSAGE)
+        print("--------------------------------")
+        # get the exit code
+        exit_code = process.returncode
+        if exit_code != 0:
+            print(f"Test failed with exit code {exit_code} [{code_folder}]")
+            # write ".failed" to the code_folder_name
+            with open(os.path.join(code_folder, ".failed"), "w") as f:
+                f.write(f"{exit_code}")
+            print("--------------------------------")
+            print(f"Fixing code... [{code_folder}]")
+            print("--------------------------------")
+        else:
+            SUCCESS = True
+            print(f"Test passed with exit code {exit_code} [{code_folder}]")
+            # write ".success" to the code_folder_name
+            with open(os.path.join(code_folder, ".success"), "w") as f:
+                f.write(f"{exit_code}")
+            print("--------------------------------")
+            break
+
+    print("--------------------------------")
+    print(f"Processor {id} finished")
+
+async def main(args):
+
+    queue = asyncio.Queue()
+    folder_name = get_folder_name(args)
+
+    await initialize_queue(args, folder_name, queue)
+
+    tasks = []
+    for i in range(args.parallel):
+        task = asyncio.create_task(processor(args, queue, i))
+        tasks.append(task)
+
+    await asyncio.gather(*tasks)
+
+
+if __name__ == "__main__":
+    # parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-a", "--api", type=str, default="deepseek")
+    parser.add_argument("-d", "--dir", type=str, default=".")
+    parser.add_argument("-b", "--breadth", type=int, default=3)
+    parser.add_argument("-t", "--depth", type=int, default=3)
+    parser.add_argument("-p", "--parallel", type=int, default=2)
+    args = parser.parse_args()
+
+    # check if directory exists
+    if not os.path.exists(args.dir):
+        print(f"Directory {args.dir} does not exist")
+        exit(1)
+
+    # check if prompt.txt exists
+    if not os.path.exists(os.path.join(args.dir, "prompt.txt")):
+        print(f"Prompt file {os.path.join(args.dir, "prompt.txt")} does not exist")
+        exit(1)
+
+    # check if test.command exists
+    if os.path.exists(os.path.join(args.dir, "test.command")):
+        with open(os.path.join(args.dir, "test.command"), "r") as f:
+            TEST_COMMAND = f.read()
+
+    asyncio.run(main(args))

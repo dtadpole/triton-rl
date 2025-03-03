@@ -1,4 +1,4 @@
-CODE_GEN_PROMPT = '''
+FUNC_GEN_PROMPT = '''
 Respond in the following format, start with a "think" section, followed by one code block in markdown, and followed by a "test" section.
     In the "think" section, give comprehensive, logically structured thinking, use markdown formatting for clear information organization, admit uncertainties for ambiguous situations.
     In the code block, generate one python file. The first line of the code block is always a comment with the filename.
@@ -65,10 +65,10 @@ DO NOT change the benchmark code.
 ONLY respond with the file that contains the fixed code.
 '''
 
-BASE_PROMPTS = [
+FUNC_BASE_PROMPTS = [
     {
         "role": "user",
-        "content": CODE_GEN_PROMPT,
+        "content": FUNC_GEN_PROMPT,
     },
     {
         "role": "user",

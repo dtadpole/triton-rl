@@ -1,13 +1,10 @@
 import json
 import requests
 import os
+import asyncio
+import aiohttp
 from google import genai
 from google.genai import types
-
-API_ENDPOINTS = {
-    "gemini": lambda prompt: gemini_gen(prompt),
-    "deepseek": lambda prompt: deepseek_gen(prompt),
-}
 
 # read from $HOME/.key/gemini.api.key and set to gemini_api_key
 with open(os.path.expanduser("~/.keys/gemini.api.key"), "r") as f:
@@ -15,7 +12,7 @@ with open(os.path.expanduser("~/.keys/gemini.api.key"), "r") as f:
 
 gemini_client = genai.Client(api_key=gemini_api_key)
 
-def gemini_gen(messages):
+async def gemini_gen(messages):
     response = gemini_client.models.generate_content(
         model="gemini-2.0-flash",
         # model="gemini-2.0-pro-exp-02-05",
@@ -64,7 +61,18 @@ deepseek_provider = {
 #     "api_key": deepseek_api_key,
 # }
 
-def deepseek_gen(messages):
+async def post_data(url, data, headers):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=data, headers=headers) as response:
+            if response.status == 200:
+                return await response.json()
+            else:
+                print("Error: ", response.status)
+                print(await response.text())
+                # throw an error
+                raise Exception("Error: ", response)
+
+async def deepseek_gen(messages):
     url = deepseek_provider["url"]
     payload = {
         "model": deepseek_provider["model"],
@@ -83,10 +91,16 @@ def deepseek_gen(messages):
         "Content-Type": "application/json",
         "Authorization": f"Bearer {deepseek_provider['api_key']}"
     }
-    response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
-    print(response)
+    # response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
+    response = await post_data(url, payload, headers)
     # print(json.dumps(response.json(), indent=4))
-    return response.json()["choices"][0]["message"]
+    return response["choices"][0]["message"]
+
+
+API_ENDPOINTS = {
+    "gemini": gemini_gen,
+    "deepseek": deepseek_gen,
+}
 
 if __name__ == "__main__":
     from prompts import COMMON_PROMPT, MATMUL_PROMPT
