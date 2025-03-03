@@ -1,0 +1,35 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_000/01/softmax_triton.py", line 120, in <module>
+    verify_correctness_func(generated_triton_func, generated_torch_func, input_generator, [batch_sizes, dim_sizes])
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_000/01/benchmark.py", line 58, in verify_correctness_func
+    triton_output = func_triton(inputs)
+                    ^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_000/01/softmax_triton.py", line 87, in generated_triton_func
+    softmax_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 623, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 273, in compile
+    module = src.make_ir(options, codegen_fns, module_map, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 100, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 35:14:
+        1. Determine row index based on program ID
+        2. Iterate over row elements in blocks to compute max value
+        3. Compute sum of exponentials (value - max)
+        4. Normalize each element by sum and store result
+    """
+    row_idx = tl.program_id(0)
+    row_start = row_idx * input_row_stride
+    col_offsets = tl.arange(0, BLOCK_SIZE)
+    input_offsets = row_start + col_offsets
+
+    # Find max value in row
+    max_val = tl.float32(-float('inf'))
+              ^
+TypeError("'dtype' object is not callable")
