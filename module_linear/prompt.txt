@@ -12,7 +12,7 @@ if __name__ == "__main__":
         torch_module = torch.nn.Linear(I, O, bias=False, device=device, dtype=dtype)
         return triton_module, torch_module
 
-    def forward_generator(B, I, O, TritonModule, device='cuda', dtype=torch.float16):
+    def forward_generator(B, I, O, device='cuda', dtype=torch.float16):
         input = torch.randn(B, I, device=device, dtype=dtype)
         input = torch.nn.functional.normalize(input, dim=-1)
         return input
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
     benchmark_performance_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
 
-    def backward_generator(B, I, O, TritonModule, device='cuda', dtype=torch.float16):
+    def backward_generator(B, I, O, device='cuda', dtype=torch.float16):
         input = torch.randn(B, I, device=device, dtype=dtype)
         input = torch.nn.functional.normalize(input, dim=-1)
         d_output = torch.randn(B, O, device=device, dtype=dtype)

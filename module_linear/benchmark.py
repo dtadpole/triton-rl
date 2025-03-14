@@ -1,1 +1,1 @@
-../benchmark_module.py
+../benchmark.py

@@ -179,7 +179,7 @@ def _backward_pass(module, inputs, dy):
     """
     Helper function to compute the backward pass of the TritonModule against the TorchModule.
     """
-    detached_inputs = tuple(x.clone().detach().requires_grad_() for x in inputs) if isinstance(inputs, tuple) else tuple(inputs.clone().detach().requires_grad_())
+    detached_inputs = tuple(x.clone().detach().requires_grad_() for x in inputs) if isinstance(inputs, tuple) else (inputs.clone().detach().requires_grad_(),)
     outputs = module(*detached_inputs)
 
 
@@ -189,12 +189,12 @@ def _backward_pass(module, inputs, dy):
     else:
         outputs.backward(dy)
 
-    dx, dw = detached_inputs.grad, module.parameters().grad
+    dx, dw = tuple(x.grad for x in detached_inputs), tuple(p.grad for p in module.parameters())
     return dx, dw
 
 
 
-def verify_correctness_backward(module_generator, input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
+def verify_correctness_backward(module_generator, backward_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
     """
     Verify the backward pass of the TritonModule against the TorchModule.
     """
@@ -214,14 +214,14 @@ def verify_correctness_backward(module_generator, input_generator, dimensions, d
         triton_module, torch_module = module_generator(*config, device=device, dtype=dtype)
         _copy_parameters(torch_module, triton_module)
 
-        inputs, dy = input_generator(*config, device=device, dtype=dtype)
+        inputs, dy = backward_generator(*config, device=device, dtype=dtype)
 
         dx_triton, dw_triton = _backward_pass(triton_module, inputs, dy)
         dx_torch, dw_torch = _backward_pass(torch_module, inputs, dy)
 
         # Compare gradients
-        _check_outputs_match(config, correctness, dx_triton, dx_torch, atol=atol, rtol=rtol)
-        _check_outputs_match(config, correctness, dw_triton, dw_torch, atol=atol, rtol=rtol)
+        _check_outputs_match(config, correctness, dx_triton, dx_torch, dtype, atol=atol, rtol=rtol)
+        _check_outputs_match(config, correctness, dw_triton, dw_torch, dtype, atol=atol, rtol=rtol)
 
     # write correctness results to file
     with open("code.correctness.backward.json", "w") as f:
@@ -371,13 +371,11 @@ def benchmark_performance_func(func_triton, func_torch, input_generator, dimensi
 
     return np.median(timings_triton), np.median(timings_pytorch), np.median(speedups), performance
 
-def benchmark_performance_forward(module_generator, backward_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
+def benchmark_performance_forward(module_generator, forward_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
     """
     Benchmarks the performance of the Triton implementation against PyTorch.
     """
     configs = _generate_configs(dimensions)
-    triton_module, torch_module = module_generator(*config, device=device, dtype=dtype)
-    pytorch_compiled = torch.compile(torch_module, mode="max-autotune")
 
     timings_triton = []
     timings_pytorch = []
@@ -394,7 +392,7 @@ def benchmark_performance_forward(module_generator, backward_generator, dimensio
         triton_module, torch_module = module_generator(*config, device=device, dtype=dtype)
         pytorch_compiled = torch.compile(torch_module, mode="max-autotune")
 
-        inputs, dy = backward_generator(*config, device=device, dtype=dtype)
+        inputs = forward_generator(*config, device=device, dtype=dtype)
 
         time_triton, time_pytorch, speedup = _benchmark_implementations(
             config,
@@ -426,8 +424,6 @@ def benchmark_performance_backward(module_generator, input_generator, dimensions
     Benchmarks the performance of the Triton implementation against PyTorch.
     """
     configs = _generate_configs(dimensions)
-    triton_module, torch_module = module_generator(*config, device=device, dtype=dtype)
-    pytorch_compiled = torch.compile(torch_module, mode="max-autotune")
 
     timings_triton = []
     timings_pytorch = []
