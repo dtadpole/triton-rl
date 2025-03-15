@@ -1,7 +1,7 @@
 FUNC_GEN_PROMPT = '''
 Respond in the following format, start with a "think" section, followed by one code block in markdown, and followed by a "test" section.
     In the "think" section, give comprehensive, logically structured thinking, use markdown formatting for clear information organization, admit uncertainties for ambiguous situations.
-    In the code block, generate one python file. The first line of the code block is always a comment with the filename.
+    In the code block, generate one python file. The first line of the code block is always a comment starts with "# filename: " and follows with the filename.
         Assume benchmark.py already exists (do NOT generate benchmark.py), and has corresponding verify_correctness_* and benchmark_performance_* functions;
         Generate main code, and call the functions in benchmark.py.
     In the test section, generate instructions and test command to test the code, where the command in a bash code block, do NOT generate pip install command.
@@ -66,21 +66,3 @@ DO NOT change the benchmark code.
 ONLY respond with the file that contains the fixed code.
 MINIMIZE the changes to the code structure.
 '''
-
-FUNC_BASE_PROMPTS = [
-    {
-        "role": "user",
-        "content": FUNC_GEN_PROMPT,
-    },
-    {
-        "role": "user",
-        "content": FUNC_FORMAT_PROMPT,
-    },
-]
-
-FIX_PROMPTS = [
-    {
-        "role": "user",
-        "content": CODE_FIX_PROMPT,
-    },
-]

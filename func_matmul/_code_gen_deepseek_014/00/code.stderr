@@ -1,0 +1,17 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_matmul/code_gen_deepseek_018/00/matmul_triton.py", line 137, in <module>
+    verify_correctness_func(matmul_triton, matmul_torch, input_generator, [M_sizes, N_sizes, K_sizes])
+  File "/home/centos/triton-rl/func_matmul/code_gen_deepseek_018/00/benchmark.py", line 36, in verify_correctness_func
+    triton_output = func_triton(*inputs) if isinstance(inputs, tuple) else func_triton(inputs)
+                    ^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/func_matmul/code_gen_deepseek_018/00/matmul_triton.py", line 109, in matmul_triton
+    matmul_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 186, in run
+    timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 141, in _bench
+    raise ValueError(f"Conflicting meta-parameters: {', '.join(conflicts)}."
+ValueError: Conflicting meta-parameters: GROUP_SIZE_M. Make sure that you don't re-define auto-tuned symbols.

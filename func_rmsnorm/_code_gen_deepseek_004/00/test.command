@@ -1,0 +1,1 @@
+python rmsnorm_triton.py

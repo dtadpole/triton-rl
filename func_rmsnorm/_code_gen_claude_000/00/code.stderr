@@ -1,0 +1,50 @@
+Traceback (most recent call last):
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/core.py", line 35, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/core.py", line 1635, in load
+    return semantic.load(pointer, mask, other, boundary_check, padding_option, cache_modifier, eviction_policy,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/semantic.py", line 1141, in load
+    return _load_legacy(ptr, mask, other, boundary_check, padding, cache, eviction, is_volatile, builder)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/semantic.py", line 1069, in _load_legacy
+    raise ValueError(f"Unsupported ptr type {ptr.type.__repr__()} in `tl.load`")
+ValueError: Unsupported ptr type <[64], int64> in `tl.load`
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_rmsnorm/code_gen_claude_000/00/rmsnorm_triton.py", line 155, in <module>
+    verify_correctness_func(rmsnorm_triton, rmsnorm_torch, input_generator, [batch_sizes, dim_sizes])
+  File "/home/centos/triton-rl/func_rmsnorm/code_gen_claude_000/00/benchmark.py", line 36, in verify_correctness_func
+    triton_output = func_triton(*inputs) if isinstance(inputs, tuple) else func_triton(inputs)
+                    ^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/func_rmsnorm/code_gen_claude_000/00/rmsnorm_triton.py", line 111, in rmsnorm_triton
+    rmsnorm_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 623, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 273, in compile
+    module = src.make_ir(options, codegen_fns, module_map, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 100, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 50:16:
+        # Initialize accumulator for variance
+        var = 0.0
+
+        # Calculate variance for the row
+        for i in range(0, n_cols, BLOCK_SIZE):
+            # Create block offsets and masks
+            cols = i + tl.arange(0, BLOCK_SIZE)
+            mask = cols < n_cols
+
+            # Load the input block
+            x_ptrs = row_start_ptr + cols * stride_h
+            x = tl.load(x_ptrs, mask=mask, other=0.0)
+                ^

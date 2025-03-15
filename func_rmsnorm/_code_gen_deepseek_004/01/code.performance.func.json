@@ -1,0 +1,286 @@
+{
+    "speedup": 3.2678571425671255,
+    "device": "NVIDIA GeForce RTX 4070 Ti SUPER",
+    "results": [
+        {
+            "shape": [
+                256,
+                64
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 5.119999870657921,
+            "pytorch_time": 10.239999741315842,
+            "speedup": 2.0
+        },
+        {
+            "shape": [
+                256,
+                128
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 5.119999870657921,
+            "pytorch_time": 15.359999611973763,
+            "speedup": 3.0
+        },
+        {
+            "shape": [
+                256,
+                256
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 5.119999870657921,
+            "pytorch_time": 19.45599913597107,
+            "speedup": 3.799999927240422
+        },
+        {
+            "shape": [
+                256,
+                512
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 5.424000322818756,
+            "pytorch_time": 21.503999829292297,
+            "speedup": 3.964601502478719
+        },
+        {
+            "shape": [
+                256,
+                1024
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 6.144000217318535,
+            "pytorch_time": 23.615999147295952,
+            "speedup": 3.8437497252568185
+        },
+        {
+            "shape": [
+                256,
+                2048
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 8.191999979317188,
+            "pytorch_time": 29.69600073993206,
+            "speedup": 3.6250000994759835
+        },
+        {
+            "shape": [
+                256,
+                4096
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 10.688000358641148,
+            "pytorch_time": 41.98399931192398,
+            "speedup": 3.9281435163856737
+        },
+        {
+            "shape": [
+                512,
+                64
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 5.119999870657921,
+            "pytorch_time": 15.359999611973763,
+            "speedup": 3.0
+        },
+        {
+            "shape": [
+                512,
+                128
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 5.119999870657921,
+            "pytorch_time": 19.45599913597107,
+            "speedup": 3.799999927240422
+        },
+        {
+            "shape": [
+                512,
+                256
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 5.119999870657921,
+            "pytorch_time": 21.503999829292297,
+            "speedup": 4.200000072759578
+        },
+        {
+            "shape": [
+                512,
+                512
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 6.144000217318535,
+            "pytorch_time": 24.57600086927414,
+            "speedup": 4.0
+        },
+        {
+            "shape": [
+                512,
+                1024
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 7.168000098317862,
+            "pytorch_time": 29.69600073993206,
+            "speedup": 4.142857189259933
+        },
+        {
+            "shape": [
+                512,
+                2048
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 11.008000001311302,
+            "pytorch_time": 40.70400074124336,
+            "speedup": 3.6976744855009622
+        },
+        {
+            "shape": [
+                512,
+                4096
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 20.59200033545494,
+            "pytorch_time": 66.56000018119812,
+            "speedup": 3.2323231884663626
+        },
+        {
+            "shape": [
+                1024,
+                64
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 6.144000217318535,
+            "pytorch_time": 20.479999482631683,
+            "speedup": 3.333333131223407
+        },
+        {
+            "shape": [
+                1024,
+                128
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 6.144000217318535,
+            "pytorch_time": 21.247999742627144,
+            "speedup": 3.458333169119018
+        },
+        {
+            "shape": [
+                1024,
+                256
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 7.168000098317862,
+            "pytorch_time": 23.552000522613525,
+            "speedup": 3.28571431355596
+        },
+        {
+            "shape": [
+                1024,
+                512
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 8.191999979317188,
+            "pytorch_time": 25.599999353289604,
+            "speedup": 3.1249999289457264
+        },
+        {
+            "shape": [
+                1024,
+                1024
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 11.568000540137291,
+            "pytorch_time": 33.79200026392937,
+            "speedup": 2.92116171214566
+        },
+        {
+            "shape": [
+                1024,
+                2048
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 19.45599913597107,
+            "pytorch_time": 50.23999884724617,
+            "speedup": 2.5822368975315357
+        },
+        {
+            "shape": [
+                1024,
+                4096
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 38.91199827194214,
+            "pytorch_time": 87.0399996638298,
+            "speedup": 2.2368421959606946
+        },
+        {
+            "shape": [
+                2048,
+                64
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 7.168000098317862,
+            "pytorch_time": 23.552000522613525,
+            "speedup": 3.28571431355596
+        },
+        {
+            "shape": [
+                2048,
+                128
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 8.191999979317188,
+            "pytorch_time": 23.552000522613525,
+            "speedup": 2.8750000710542736
+        },
+        {
+            "shape": [
+                2048,
+                256
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 8.191999979317188,
+            "pytorch_time": 26.623999699950218,
+            "speedup": 3.2499999715782906
+        },
+        {
+            "shape": [
+                2048,
+                512
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 11.231999844312668,
+            "pytorch_time": 31.74399957060814,
+            "speedup": 2.826210827155748
+        },
+        {
+            "shape": [
+                2048,
+                1024
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 17.75999926030636,
+            "pytorch_time": 45.05600035190582,
+            "speedup": 2.536937062413403
+        },
+        {
+            "shape": [
+                2048,
+                2048
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 35.840000957250595,
+            "pytorch_time": 73.72800260782242,
+            "speedup": 2.0571428749615284
+        },
+        {
+            "shape": [
+                2048,
+                4096
+            ],
+            "dtype": "torch.float16",
+            "triton_time": 65.5359998345375,
+            "pytorch_time": 131.071999669075,
+            "speedup": 2.0
+        }
+    ]
+}
