@@ -1,0 +1,70 @@
+Traceback (most recent call last):
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/core.py", line 35, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/core.py", line 1548, in dot
+    return semantic.dot(input, other, acc, input_precision, max_num_imprecise_acc, out_dtype, _builder)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/semantic.py", line 1484, in dot
+    assert lhs.shape[-1].value == rhs.shape[
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: First input shape ([constexpr[64], constexpr[32]]) and second input shape [constexpr[64], constexpr[32]] are not compatible for matmul (second index of first shape (32) must be equal to first index of second shape (64)
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/03/triton_linear.py", line 268, in <module>
+    verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/03/benchmark.py", line 154, in verify_correctness_forward
+    triton_output = triton_module(*inputs) if isinstance(inputs, tuple) else triton_module(inputs)
+                                                                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/03/triton_linear.py", line 249, in forward
+    return TritonLinearFunction.apply(x, self.weight)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/torch/autograd/function.py", line 575, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/03/triton_linear.py", line 198, in forward
+    forward_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 186, in run
+    timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 166, in _bench
+    return self.do_bench(kernel_call, quantiles=(0.5, 0.2, 0.8))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/testing.py", line 117, in do_bench
+    fn()
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 152, in kernel_call
+    self.fn.run(
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 623, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 273, in compile
+    module = src.make_ir(options, codegen_fns, module_map, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 100, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 45:15:
+    weight_ptrs = weight_ptr + offs_o[:, None] * stride_weight_o + offs_i[None, :] * stride_weight_i
+
+    acc = tl.zeros((BLOCK_SIZE_B, BLOCK_SIZE_O), dtype=tl.float32)
+
+    for i in range(0, I, BLOCK_SIZE_I):
+        mask_input = (offs_b[:, None] < B) & (offs_i[None, :] + i < I)
+        mask_weight = (offs_o[:, None] < O) & (offs_i[None, :] + i < I)
+
+        input_block = tl.load(input_ptrs, mask=mask_input, other=0.0)
+        weight_block = tl.load(weight_ptrs, mask=mask_weight, other=0.0)
+
+        acc += tl.dot(input_block, weight_block, allow_tf32=True)
+               ^

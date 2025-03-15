@@ -1,0 +1,19 @@
+/home/centos/triton-rl/module_linear/code_gen_deepseek_005/00/triton_linear.py:31: FutureWarning: `torch.cuda.amp.custom_fwd(args...)` is deprecated. Please use `torch.amp.custom_fwd(args..., device_type='cuda')` instead.
+  @custom_fwd
+/home/centos/triton-rl/module_linear/code_gen_deepseek_005/00/triton_linear.py:69: FutureWarning: `torch.cuda.amp.custom_bwd(args...)` is deprecated. Please use `torch.amp.custom_bwd(args..., device_type='cuda')` instead.
+  @custom_bwd
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/00/triton_linear.py", line 165, in <module>
+    verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/00/benchmark.py", line 150, in verify_correctness_forward
+    triton_module, torch_module = module_generator(*config, device=device, dtype=dtype)
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/00/triton_linear.py", line 155, in module_generator
+    triton_module = TritonLinear(I, O, device=device, dtype=dtype)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/00/triton_linear.py", line 21, in __init__
+    self.reset_parameters()
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek_005/00/triton_linear.py", line 24, in reset_parameters
+    torch.nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+                                                  ^^^^
+NameError: name 'math' is not defined. Did you forget to import 'math'?

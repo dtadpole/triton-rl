@@ -58,11 +58,13 @@ def function_name(arg1: type, arg2: type) -> return_type:
 ```
 '''
 
-CODE_FIX_PROMPT = '''Fix the code in the code block, files and error message are provided.
+CODE_FIX_PROMPT = '''Fix the code in the code block, original files and error message are provided.
+ANALYZE the error message, and fix the code in the code block.
 DO NOT change the filename, only fix the code in the code block.
 DO NOT add any other files.
 DO NOT change the benchmark code.
 ONLY respond with the file that contains the fixed code.
+MINIMIZE the changes to the code structure.
 '''
 
 FUNC_BASE_PROMPTS = [

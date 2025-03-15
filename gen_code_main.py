@@ -246,7 +246,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-a", "--api", type=str, default="deepseek")
     parser.add_argument("-d", "--dir", type=str, default=".")
-    parser.add_argument("-b", "--breadth", type=int, default=3)
+    parser.add_argument("-b", "--breadth", type=int, default=4)
     parser.add_argument("-t", "--depth", type=int, default=3)
     parser.add_argument("-p", "--parallel", type=int, default=2)
     args = parser.parse_args()

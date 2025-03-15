@@ -12,19 +12,14 @@ import json
 def _generate_configs(dims):
     """
     Generate all possible configurations of the dimensions.
-    e.g. dims = [[16, 32], [128, 256], [256, 512, 1024]]
-    returns:
-    configs = [
-        [16, 128, 256],
+    e.g. dims = [[16, 32], [128, 256], [512, 1024]]
+    returns: [
         [16, 128, 512],
         [16, 128, 1024],
-        [16, 256, 256],
         [16, 256, 512],
         [16, 256, 1024],
-        [32, 128, 256],
         [32, 128, 512],
         [32, 128, 1024],
-        [32, 256, 256],
         [32, 256, 512],
         [32, 256, 1024],
     ]
@@ -52,19 +47,7 @@ def _generate_configs(dims):
     return configs
 
 
-def _check_outputs_match(config, correctness, triton_output, torch_output, dtype, atol=1e-2, rtol=1e-2):
-    """
-    Helper function to check if outputs from Triton and PyTorch implementations match.
-
-    Args:
-        triton_output: Output tensor(s) from Triton implementation
-        torch_output: Output tensor(s) from PyTorch implementation
-        atol: Absolute tolerance for comparison
-        rtol: Relative tolerance for comparison
-
-    Returns:
-        bool: True if outputs match within tolerance, False otherwise
-    """
+def _check_outputs_match(config, correctness, triton_output, torch_output, dtype, atol=1e-2, rtol=1e-2, label=""):
     mismatch = False
     if isinstance(torch_output, tuple):
         for i in range(len(torch_output)):
@@ -81,7 +64,7 @@ def _check_outputs_match(config, correctness, triton_output, torch_output, dtype
 
 
     if not mismatch:
-        print(f"✅ Correctness test passed for shape ({config}, {dtype})")
+        print(f"✅ Correctness test passed for shape ({config}, {dtype}) [{label}]")
         correctness["passed"] += 1
         correctness["total"] += 1
         correctness["results"].append({
@@ -90,7 +73,7 @@ def _check_outputs_match(config, correctness, triton_output, torch_output, dtype
             "correctness": True
         })
     else:
-        print(f"❌ Correctness test failed for shape ({config}, {dtype})")
+        print(f"❌ Correctness test failed for shape ({config}, {dtype}) [{label}]")
         correctness["failed"] += 1
         correctness["total"] += 1
         correctness["results"].append({
@@ -103,16 +86,6 @@ def _check_outputs_match(config, correctness, triton_output, torch_output, dtype
 
 
 def _copy_parameters(source_module, target_module):
-    """
-    Copies parameters from `source_module` to `target_module` layer by layer.
-
-    Args:
-        source_module (torch.nn.Module): Source module from which to copy parameters.
-        target_module (torch.nn.Module): Target module to which parameters are copied.
-
-    Raises:
-        KeyError: If a parameter in the source module does not exist in the target module.
-    """
     # Iterate over all parameters in the source module
     for name, source_param in source_module.named_parameters():
         # Retrieve the corresponding parameter in the target module by name
@@ -121,9 +94,23 @@ def _copy_parameters(source_module, target_module):
         target_param.data.copy_(source_param.data)
 
 
+def _backward_pass(module, inputs, dy):
+    detached_inputs = tuple(x.clone().detach().requires_grad_() for x in inputs) if isinstance(inputs, tuple) else (inputs.clone().detach().requires_grad_(),)
+    outputs = module(*detached_inputs)
+
+    if isinstance(outputs, tuple):
+        for t_out, t_dy in zip(outputs, dy):
+            t_out.backward(t_dy, retain_graph=True)
+    else:
+        outputs.backward(dy)
+
+    dx, dw = tuple([x.grad for x in detached_inputs]), tuple([p.grad for p in module.parameters()])
+    return dx, dw
+
+
 def verify_correctness_func(func_triton, func_torch, input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
     """
-    Verifies the correctness of the Triton implementation against PyTorch.
+    Verify the function correctness of triton implementation against torch implementation
     """
     torch.manual_seed(seed)
     device_name = torch.cuda.get_device_name(0)
@@ -140,14 +127,13 @@ def verify_correctness_func(func_triton, func_torch, input_generator, dimensions
         inputs = input_generator(*config, device=device, dtype=dtype)
         triton_output = func_triton(*inputs) if isinstance(inputs, tuple) else func_triton(inputs)
         torch_output = func_torch(*inputs) if isinstance(inputs, tuple) else func_torch(inputs)
-        _check_outputs_match(config, correctness, triton_output, torch_output, dtype, atol=atol, rtol=rtol)
+        _check_outputs_match(config, correctness, triton_output, torch_output, dtype, atol=atol, rtol=rtol, label="func")
 
     return correctness
 
-
 def verify_correctness_forward(module_generator, input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
     """
-    Verify the forward pass of the TritonModule against the TorchModule.
+    Verify the forward pass
     """
     torch.manual_seed(seed)
     device_name = torch.cuda.get_device_name(0)
@@ -167,7 +153,7 @@ def verify_correctness_forward(module_generator, input_generator, dimensions, de
         inputs = input_generator(*config, device=device, dtype=dtype)
         triton_output = triton_module(*inputs) if isinstance(inputs, tuple) else triton_module(inputs)
         torch_output = torch_module(*inputs) if isinstance(inputs, tuple) else torch_module(inputs)
-        _check_outputs_match(config, correctness, triton_output, torch_output, dtype, atol=atol, rtol=rtol)
+        _check_outputs_match(config, correctness, triton_output, torch_output, dtype, atol=atol, rtol=rtol, label="forward")
 
     # write correctness results to file
     with open("code.correctness.json", "w") as f:
@@ -175,28 +161,10 @@ def verify_correctness_forward(module_generator, input_generator, dimensions, de
 
     return correctness
 
-def _backward_pass(module, inputs, dy):
-    """
-    Helper function to compute the backward pass of the TritonModule against the TorchModule.
-    """
-    detached_inputs = tuple(x.clone().detach().requires_grad_() for x in inputs) if isinstance(inputs, tuple) else (inputs.clone().detach().requires_grad_(),)
-    outputs = module(*detached_inputs)
-
-
-    if isinstance(outputs, tuple):
-        for t_out, t_dy in zip(outputs, dy):
-            t_out.backward(t_dy, retain_graph=True)
-    else:
-        outputs.backward(dy)
-
-    dx, dw = tuple(x.grad for x in detached_inputs), tuple(p.grad for p in module.parameters())
-    return dx, dw
-
-
 
 def verify_correctness_backward(module_generator, backward_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
     """
-    Verify the backward pass of the TritonModule against the TorchModule.
+    Verify the backward pass
     """
     torch.manual_seed(seed)
     device_name = torch.cuda.get_device_name(0)
@@ -220,8 +188,8 @@ def verify_correctness_backward(module_generator, backward_generator, dimensions
         dx_torch, dw_torch = _backward_pass(torch_module, inputs, dy)
 
         # Compare gradients
-        _check_outputs_match(config, correctness, dx_triton, dx_torch, dtype, atol=atol, rtol=rtol)
-        _check_outputs_match(config, correctness, dw_triton, dw_torch, dtype, atol=atol, rtol=rtol)
+        _check_outputs_match(config, correctness, dx_triton, dx_torch, dtype, atol=atol, rtol=rtol, label="backward dx")
+        _check_outputs_match(config, correctness, dw_triton, dw_torch, dtype, atol=atol, rtol=rtol, label="backward dw")
 
     # write correctness results to file
     with open("code.correctness.backward.json", "w") as f:
@@ -231,19 +199,6 @@ def verify_correctness_backward(module_generator, backward_generator, dimensions
 
 
 def _benchmark_implementations(config, triton_fn, torch_fn, inputs, timings_triton, timings_pytorch, speedups, performance, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
-    """
-    Helper function to benchmark Triton and PyTorch implementations.
-
-    Args:
-        triton_fn: Function to benchmark (Triton implementation)
-        torch_fn: Function to benchmark (PyTorch implementation)
-        inputs: Tuple or single input tensor
-        num_warmup: Number of warmup iterations
-        num_repeats: Number of timing iterations
-
-    Returns:
-        tuple: (triton_time, pytorch_time, speedup) in microseconds
-    """
     quantiles = [0.5]
 
     # Ensure inputs is a tuple
@@ -285,17 +240,7 @@ def _benchmark_implementations(config, triton_fn, torch_fn, inputs, timings_trit
     return time_triton, time_pytorch, speedup
 
 
-def _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups, filename="code.performance.func.png"):
-    """
-    Helper function to plot benchmark results comparing Triton and PyTorch implementations.
-
-    Args:
-        configs: List of configuration tuples used in benchmarking
-        timings_triton: List of Triton implementation timings
-        timings_pytorch: List of PyTorch implementation timings
-        speedups: List of speedup ratios (PyTorch/Triton)
-        filename: Name of output file for the graph
-    """
+def _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups, label=""):
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
     x_labels = [f"({config})" for config in configs]
@@ -318,6 +263,8 @@ def _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups, 
     ax2.plot(x, speedups, label='Speedup (PyTorch / Triton)', color='green', marker='o')
     ax2.set_ylabel('Speedup (x)')
     ax2.legend(loc='upper right')
+
+    filename = f"code.performance.{label}.png"
 
     fig.tight_layout()
     plt.savefig(filename)
@@ -367,13 +314,13 @@ def benchmark_performance_func(func_triton, func_torch, input_generator, dimensi
         f.write(json.dumps(performance, indent=4))
 
     # Generate performance comparison graph
-    _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups)
+    _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups, label="func")
 
     return np.median(timings_triton), np.median(timings_pytorch), np.median(speedups), performance
 
 def benchmark_performance_forward(module_generator, forward_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
     """
-    Benchmarks the performance of the Triton implementation against PyTorch.
+    Benchmarks the performance of forward pass
     """
     configs = _generate_configs(dimensions)
 
@@ -390,13 +337,14 @@ def benchmark_performance_forward(module_generator, forward_generator, dimension
 
     for config in configs:
         triton_module, torch_module = module_generator(*config, device=device, dtype=dtype)
+        triton_compiled = torch.compile(triton_module, mode="max-autotune")
         pytorch_compiled = torch.compile(torch_module, mode="max-autotune")
 
         inputs = forward_generator(*config, device=device, dtype=dtype)
 
         time_triton, time_pytorch, speedup = _benchmark_implementations(
             config,
-            lambda inputs: triton_module(*inputs) if isinstance(inputs, tuple) else triton_module(inputs),
+            lambda inputs: triton_compiled(*inputs) if isinstance(inputs, tuple) else triton_compiled(inputs),
             lambda inputs: pytorch_compiled(*inputs) if isinstance(inputs, tuple) else pytorch_compiled(inputs),
             inputs,
             timings_triton,
@@ -414,14 +362,14 @@ def benchmark_performance_forward(module_generator, forward_generator, dimension
         f.write(json.dumps(performance, indent=4))
 
     # Generate performance comparison graph
-    _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups)
+    _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups, label="forward")
 
     return np.median(timings_triton), np.median(timings_pytorch), np.median(speedups), performance
 
 
 def benchmark_performance_backward(module_generator, input_generator, dimensions, num_warmup=25, num_repeats=100, device='cuda', dtype=torch.float16):
     """
-    Benchmarks the performance of the Triton implementation against PyTorch.
+    Benchmarks the performance of backward pass
     """
     configs = _generate_configs(dimensions)
 
@@ -438,13 +386,14 @@ def benchmark_performance_backward(module_generator, input_generator, dimensions
 
     for config in configs:
         triton_module, torch_module = module_generator(*config, device=device, dtype=dtype)
+        triton_compiled = torch.compile(triton_module, mode="max-autotune")
         pytorch_compiled = torch.compile(torch_module, mode="max-autotune")
 
         inputs, dy = input_generator(*config, device=device, dtype=dtype)
 
         time_triton, time_pytorch, speedup = _benchmark_implementations(
             config,
-            lambda x: _backward_pass(triton_module, x[0], x[1]),
+            lambda x: _backward_pass(triton_compiled, x[0], x[1]),
             lambda x: _backward_pass(pytorch_compiled, x[0], x[1]),
             (inputs, dy),
             timings_triton,
@@ -462,7 +411,7 @@ def benchmark_performance_backward(module_generator, input_generator, dimensions
         f.write(json.dumps(performance, indent=4))
 
     # Generate performance comparison graph
-    _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups)
+    _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups, label="backward")
 
     return np.median(timings_triton), np.median(timings_pytorch), np.median(speedups), performance
 
