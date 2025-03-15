@@ -1,0 +1,83 @@
+{
+    "candidates": [
+        {
+            "content": {
+                "parts": [
+                    {
+                        "text": "```text\n<think>\nThe problem is to implement matrix multiplication using Triton, with autotuning for block sizes and group sizes. The code should be structured with detailed comments and should be testable using provided benchmark functions (`verify_correctness_func` and `benchmark_performance_func`) from the `benchmark.py` file.\n\nHere's the plan:\n\n1.  **Triton Kernel Implementation (`matmul_triton.py`):**\n    *   Implement the matrix multiplication kernel using Triton.\n    *   Use `triton.autotune` to explore different block sizes (`BLOCK_SIZE_M`, `BLOCK_SIZE_N`, `BLOCK_SIZE_K`) and group sizes (`GROUP_SIZE_M`).\n    *   Implement necessary helper functions for memory access and computation.\n    *   Adhere to the specified commenting style.\n2.  **Testing (`matmul_triton.py`):**\n    *   Include the `if __name__ == \"__main__\":` block as provided in the prompt.\n    *   Define an input generator function that creates random matrices `A` and `B` with specified dimensions and normalizes them.\n    *   Call `verify_correctness_func` and `benchmark_performance_func` from `benchmark.py` to test the implementation.\n3.  **Test Instructions:**\n    *   Provide instructions on how to run the test.\n    *   Include the test command as a bash code block.\n</think>\n```python\n# filename: matmul_triton.py\nimport torch\nimport triton\nimport triton.language as tl\n\n@triton.autotune(\n    configs=[\n        triton.Config({'BLOCK_SIZE_M': 128, 'BLOCK_SIZE_N': 256, 'BLOCK_SIZE_K': 64, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 128 and args['N'] > 256),\n        triton.Config({'BLOCK_SIZE_M': 64, 'BLOCK_SIZE_N': 128, 'BLOCK_SIZE_K': 32, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 64 and args['N'] > 128),\n        triton.Config({'BLOCK_SIZE_M': 32, 'BLOCK_SIZE_N': 64, 'BLOCK_SIZE_K': 16, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 32 and args['N'] > 64),\n        triton.Config({'BLOCK_SIZE_M': 16, 'BLOCK_SIZE_N': 32, 'BLOCK_SIZE_K': 8, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 16 and args['N'] > 32),\n        triton.Config({'BLOCK_SIZE_M': 128, 'BLOCK_SIZE_N': 128, 'BLOCK_SIZE_K': 32, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 128 and args['N'] > 128),\n        triton.Config({'BLOCK_SIZE_M': 64, 'BLOCK_SIZE_N': 64, 'BLOCK_SIZE_K': 16, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 64 and args['N'] > 64),\n        triton.Config({'BLOCK_SIZE_M': 32, 'BLOCK_SIZE_N': 32, 'BLOCK_SIZE_K': 8, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 32 and args['N'] > 32),\n        triton.Config({'BLOCK_SIZE_M': 16, 'BLOCK_SIZE_N': 16, 'BLOCK_SIZE_K': 4, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 16 and args['N'] > 16),\n        triton.Config({'BLOCK_SIZE_M': 128, 'BLOCK_SIZE_N': 64, 'BLOCK_SIZE_K': 32, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 128 and args['N'] > 64),\n        triton.Config({'BLOCK_SIZE_M': 64, 'BLOCK_SIZE_N': 32, 'BLOCK_SIZE_K': 16, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 64 and args['N'] > 32),\n    ],\n    key=['M', 'N', 'K'],\n)\n@triton.jit\ndef matmul_kernel(\n    a_ptr, b_ptr, c_ptr,\n    M, N, K,\n    stride_am, stride_ak,\n    stride_bk, stride_bn,\n    stride_cm, stride_cn,\n    BLOCK_SIZE_M: tl.constexpr, BLOCK_SIZE_N: tl.constexpr, BLOCK_SIZE_K: tl.constexpr,\n    GROUP_SIZE_M: tl.constexpr,\n):\n    \"\"\"\n    Description: Performs matrix multiplication C = A @ B using Triton.\n\n    Args:\n        a_ptr (torch.Tensor): Pointer to the first input matrix A. Shape: (M, K)\n        b_ptr (torch.Tensor): Pointer to the second input matrix B. Shape: (K, N)\n        c_ptr (torch.Tensor): Pointer to the output matrix C. Shape: (M, N)\n        M (int): Number of rows in matrix A and C.\n        N (int): Number of columns in matrix B and C.\n        K (int): Number of columns in matrix A and rows in matrix B.\n        stride_am (int): Stride in elements along the M dimension for A.\n        stride_ak (int): Stride in elements along the K dimension for A.\n        stride_bk (int): Stride in elements along the K dimension for B.\n        stride_bn (int): Stride in elements along the N dimension for B.\n        stride_cm (int): Stride in elements along the M dimension for C.\n        stride_cn (int): Stride in elements along the N dimension for C.\n        BLOCK_SIZE_M (tl.constexpr): Size of the block in the M dimension.\n        BLOCK_SIZE_N (tl.constexpr): Size of the block in the N dimension.\n        BLOCK_SIZE_K (tl.constexpr): Size of the block in the K dimension.\n        GROUP_SIZE_M (tl.constexpr): Group size for the M dimension.\n\n    Returns:\n        None\n\n    Explanation:\n        1.  Compute the starting offsets for the blocks in A and B.\n        2.  Create a range of offsets for the M, N, and K dimensions within the block.\n        3.  Initialize an accumulator to zero.\n        4.  Iterate over the K dimension to perform the matrix multiplication.\n        5.  Load the blocks from A and B into registers.\n        6.  Perform the dot product of the blocks.\n        7.  Write the result to the output matrix C.\n    \"\"\"\n    # 1. Compute block ID\n    pid = tl.program_id(axis=0)\n    num_pid_n = tl.cdiv(N, BLOCK_SIZE_N)\n    pid_m = pid // num_pid_n\n    pid_n = pid % num_pid_n\n\n    # 2. Compute data offsets\n    offs_am = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)\n    offs_bn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)\n    offs_k = tl.arange(0, BLOCK_SIZE_K)\n    a_ptrs = a_ptr + (offs_am[:, None] * stride_am + offs_k[None, :] * stride_ak)\n    b_ptrs = b_ptr + (offs_k[:, None] * stride_bk + offs_bn[None, :] * stride_bn)\n\n    # 3. Create mask\n    mask_am = offs_am[:, None] < M\n    mask_bn = offs_bn[None, :] < N\n\n    # 4. Initialize accumulator\n    accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)\n\n    # 5. Iterate and compute\n    for k in range(0, K, BLOCK_SIZE_K):\n        # Load A and B\n        a = tl.load(a_ptrs, mask=mask_am & (offs_k[None, :] + k < K), other=0.0).to(tl.float16)\n        b = tl.load(b_ptrs, mask=mask_bn & (offs_k[:, None] + k < K), other=0.0).to(tl.float16)\n\n        # Dot product\n        accumulator += tl.dot(a, b)\n\n        # Update pointers\n        a_ptrs += BLOCK_SIZE_K * stride_ak\n        b_ptrs += BLOCK_SIZE_K * stride_bk\n\n    # 6. Write back to C\n    offs_cm = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)\n    offs_cn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)\n    c_ptrs = c_ptr + offs_cm[:, None] * stride_cm + offs_cn[None, :] * stride_cn\n    mask_cm = offs_cm[:, None] < M\n    mask_cn = offs_cn[None, :] < N\n    tl.store(c_ptrs, accumulator.to(tl.float16), mask=mask_cm & mask_cn)\n\ndef matmul(a, b):\n    \"\"\"\n    Description: Wraps the triton kernel to perform matrix multiplication.\n\n    Args:\n        a (torch.Tensor): The first input matrix. Shape: (M, K)\n        b (torch.Tensor): The second input matrix. Shape: (K, N)\n\n    Returns:\n        torch.Tensor: The output matrix. Shape: (M, N)\n\n    Explanation:\n        1.  Allocate memory for the output matrix.\n        2.  Determine the grid size for the Triton kernel.\n        3.  Launch the Triton kernel.\n        4.  Return the output matrix.\n    \"\"\"\n    M, K = a.shape\n    K, N = b.shape\n    c = torch.empty((M, N), device=a.device, dtype=a.dtype)\n    grid = lambda META: (triton.cdiv(M, META['BLOCK_SIZE_M']) * triton.cdiv(N, META['BLOCK_SIZE_N']),)\n    matmul_kernel[grid](\n        a, b, c, M, N, K,\n        a.stride(0), a.stride(1),\n        b.stride(0), b.stride(1),\n        c.stride(0), c.stride(1)\n    )\n    return c\n\ndef torch_matmul(a, b):\n    \"\"\"\n    Description: Performs matrix multiplication using torch.\n\n    Args:\n        a (torch.Tensor): The first input matrix.\n        b (torch.Tensor): The second input matrix.\n\n    Returns:\n        torch.Tensor: The output matrix.\n    \"\"\"\n    return torch.matmul(a, b)\n\nif __name__ == \"__main__\":\n    M_sizes = [256, 1024, 4096]\n    N_sizes = [256, 1024, 4096]\n    K_sizes = [256, 512, 1024, 2048, 4096]\n    def input_generator(M, N, K, device='cuda', dtype=torch.float16):\n        A = torch.randn(M, K, device=device, dtype=dtype)\n        A = torch.nn.functional.normalize(A, dim=-1)\n        B = torch.randn(K, N, device=device, dtype=dtype)\n        B = torch.nn.functional.normalize(B, dim=-1)\n        return A, B\n\n    from benchmark import verify_correctness_func, benchmark_performance_func\n    verify_correctness_func(matmul, torch_matmul, input_generator, [M_sizes, N_sizes, K_sizes])\n    benchmark_performance_func(matmul, torch_matmul, input_generator, [M_sizes, N_sizes, K_sizes])\n```\n\n```text\n<test>\nTo test the code:\n\n1.  Save the above code as `matmul_triton.py`\n2.  Make sure you have `benchmark.py` in the same directory.\n3.  Run the `matmul_triton.py` script.\n\n```bash\npython matmul_triton.py\n```\n</test>\n```"
+                    }
+                ],
+                "role": "model"
+            },
+            "finishReason": "STOP",
+            "citationMetadata": {
+                "citationSources": [
+                    {
+                        "startIndex": 1304,
+                        "endIndex": 1447,
+                        "uri": "https://triton-lang.org/main/getting-started/tutorials/08-grouped-gemm.html"
+                    },
+                    {
+                        "startIndex": 1331,
+                        "endIndex": 1489,
+                        "uri": "https://github.com/ROCm/triton"
+                    },
+                    {
+                        "startIndex": 3013,
+                        "endIndex": 3218,
+                        "uri": "https://blog.csdn.net/kebijuelun/article/details/136343258"
+                    },
+                    {
+                        "startIndex": 3135,
+                        "endIndex": 3298,
+                        "uri": "https://blog.csdn.net/kebijuelun/article/details/136343258"
+                    },
+                    {
+                        "startIndex": 5228,
+                        "endIndex": 5471,
+                        "uri": "https://huggingface.co/TheBloke/VicUnlocked-30B-LoRA-GPTQ/discussions/2"
+                    },
+                    {
+                        "startIndex": 5349,
+                        "endIndex": 5552,
+                        "uri": "https://github.com/openai/triton/blob/main/python/tutorials/03-matrix-multiplication.py"
+                    },
+                    {
+                        "startIndex": 6243,
+                        "endIndex": 6444,
+                        "uri": "https://medium.com/@sherlockliao01/triton-tutorial-2-5de66cd2170d"
+                    },
+                    {
+                        "startIndex": 7118,
+                        "endIndex": 7324,
+                        "uri": "https://github.com/codingjin/tritontutorial"
+                    },
+                    {
+                        "startIndex": 7216,
+                        "endIndex": 7464,
+                        "uri": "https://github.com/openai/triton/issues/2818"
+                    }
+                ]
+            },
+            "avgLogprobs": -0.05268332632751266
+        }
+    ],
+    "usageMetadata": {
+        "promptTokenCount": 3771,
+        "candidatesTokenCount": 3062,
+        "totalTokenCount": 6833,
+        "promptTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 3771
+            }
+        ],
+        "candidatesTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 3062
+            }
+        ]
+    },
+    "modelVersion": "gemini-2.0-flash"
+}

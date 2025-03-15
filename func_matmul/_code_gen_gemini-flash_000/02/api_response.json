@@ -1,0 +1,53 @@
+{
+    "candidates": [
+        {
+            "content": {
+                "parts": [
+                    {
+                        "text": "```text\n### Think:\nThe task is to generate a Triton implementation for matrix multiplication and benchmark it against PyTorch. The implementation should utilize autotuning for block sizes (BLOCK_SIZE_M, BLOCK_SIZE_N, BLOCK_SIZE_K) and group size (GROUP_SIZE_M). The provided `benchmark.py` file should be used to verify correctness and benchmark performance. The input matrices A and B are normalized before multiplication in the input generator.\n\nHere's a breakdown of the steps involved:\n\n1.  **Triton Kernel Implementation:** This will involve defining the Triton kernel with appropriate block sizes and autotuning directives.  We'll need to load matrix tiles into shared memory, perform the multiplication, and then write the results back to global memory. Super-blocks should be used to improve L2 cache hit rate.\n2.  **Python Wrapper Function:** This function will allocate the necessary memory, copy data to the GPU, launch the Triton kernel, and copy the results back to the host.\n3.  **PyTorch Reference Implementation:** This will be a simple matrix multiplication using `torch.matmul`.\n4.  **Correctness Verification:** The `verify_correctness_func` function from `benchmark.py` will be used to compare the output of the Triton implementation with the PyTorch implementation.\n5.  **Performance Benchmarking:** The `benchmark_performance_func` function from `benchmark.py` will be used to measure the execution time of both implementations and calculate the speedup.\n6.  **Autotuning:** Autotuning will be used to find the optimal block sizes and group size for the target hardware.\n\nThe autotuning configurations should explore various `BLOCK_SIZE_M`, `BLOCK_SIZE_N`, `BLOCK_SIZE_K`, and `GROUP_SIZE_M` values.\nThe shapes of A and B in the input_generator are (M, K) and (K, N) respectively.\n</text>\n```python\n# filename: matmul_triton.py\nimport torch\nimport triton\nimport triton.language as tl\n\n@triton.jit\ndef _matmul_kernel(\n    A, B, C,  # pointers to matrices\n    M, N, K,  # matrix dimensions\n    stride_am, stride_ak,  # strides of A\n    stride_bk, stride_bn,  # strides of B\n    stride_cm, stride_cn,  # strides of C\n    BLOCK_SIZE_M: tl.constexpr,\n    BLOCK_SIZE_N: tl.constexpr,\n    BLOCK_SIZE_K: tl.constexpr,\n    GROUP_SIZE_M: tl.constexpr,\n):\n    \"\"\"\n    [Description: Performs matrix multiplication C = A @ B using Triton.]\n\n    Args:\n        A (torch.Tensor): Pointer to the first input matrix. [Shape: (M, K)]\n        B (torch.Tensor): Pointer to the second input matrix. [Shape: (K, N)]\n        C (torch.Tensor): Pointer to the output matrix. [Shape: (M, N)]\n        M (int): Number of rows in A and C.\n        N (int): Number of columns in B and C.\n        K (int): Number of columns in A and rows in B.\n        stride_am (int): Stride of A in the M dimension.\n        stride_ak (int): Stride of A in the K dimension.\n        stride_bk (int): Stride of B in the K dimension.\n        stride_bn (int): Stride of B in the N dimension.\n        stride_cm (int): Stride of C in the M dimension.\n        stride_cn (int): Stride of C in the N dimension.\n        BLOCK_SIZE_M (int): Size of block in the M dimension.\n        BLOCK_SIZE_N (int): Size of block in the N dimension.\n        BLOCK_SIZE_K (int): Size of block in the K dimension.\n        GROUP_SIZE_M (int): Group size in the M dimension for cooperative fetching.\n\n    Returns:\n        None\n\n    Explanation:\n        1.  Compute the block ID along the M and N dimensions.\n        2.  Compute the row and column indices for the current block.\n        3.  Initialize the accumulator to zero.\n        4.  Iterate over the K dimension in blocks.\n        5.  Load the corresponding blocks from A and B into registers.\n        6.  Perform the matrix multiplication within the registers.\n        7.  Write the result to the output matrix C.\n    \"\"\"\n    pid = tl.program_id(axis=0)\n    num_pid_m = tl.cdiv(M, BLOCK_SIZE_M)\n    num_pid_n = tl.cdiv(N, BLOCK_SIZE_N)\n    pid_m = pid // num_pid_n\n    pid_n = pid % num_pid_n\n\n    # [0, BLOCK_SIZE_M * num_pid_m)\n    block_start_m = pid_m * BLOCK_SIZE_M\n    # [0, BLOCK_SIZE_N * num_pid_n)\n    block_start_n = pid_n * BLOCK_SIZE_N\n\n    # row/col indices\n    off_m = tl.arange(0, BLOCK_SIZE_M)\n    off_n = tl.arange(0, BLOCK_SIZE_N)\n    # mask\n    mask_m = (block_start_m + off_m) < M\n    mask_n = (block_start_n + off_n) < N\n\n    # ---------------------------\n    # cashed results\n    # ---------------------------\n    accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)\n    for k in range(0, K, BLOCK_SIZE_K):\n        # inner loop\n        off_k = tl.arange(0, BLOCK_SIZE_K)\n        a_ptrs = A + (block_start_m + off_m[:, None]) * stride_am + (k + off_k[None, :]) * stride_ak\n        b_ptrs = B + (k + off_k[:, None]) * stride_bk + (block_start_n + off_n[None, :]) * stride_bn\n\n        a_mask = (k + off_k[None, :]) < K\n        b_mask = (k + off_k[:, None]) < K\n\n        a = tl.load(a_ptrs, mask=mask_m[:, None] & a_mask, other=0.0)\n        b = tl.load(b_ptrs, mask=b_mask[:, None] & mask_n[None, :], other=0.0)\n\n        accumulator += tl.dot(a, b)\n\n    c_ptrs = C + (block_start_m + off_m[:, None]) * stride_cm + (block_start_n + off_n[None, :]) * stride_cn\n    tl.store(c_ptrs, accumulator, mask=mask_m[:, None] & mask_n[None, :])\n\ndef generated_triton_func(a, b):\n    \"\"\"\n    [Description: Wrapper function for matrix multiplication using Triton kernel.]\n\n    Args:\n        a (torch.Tensor): First input matrix. [Shape: (M, K)]\n        b (torch.Tensor): Second input matrix. [Shape: (K, N)]\n\n    Returns:\n        torch.Tensor: Output matrix C = A @ B. [Shape: (M, N)]\n\n    Explanation:\n        1.  Allocate memory for the output matrix C.\n        2.  Determine the dimensions of the matrices.\n        3.  Launch the Triton kernel with appropriate grid size and block sizes.\n        4.  Return the output matrix C.\n    \"\"\"\n    M, K = a.shape\n    K, N = b.shape\n    c = torch.empty((M, N), device=a.device, dtype=a.dtype)\n    grid = lambda META: (\n        triton.cdiv(M, META['BLOCK_SIZE_M']) * triton.cdiv(N, META['BLOCK_SIZE_N']),\n    )\n    _matmul_kernel[grid](\n        a, b, c,\n        M, N, K,\n        a.stride(0), a.stride(1),\n        b.stride(0), b.stride(1),\n        c.stride(0), c.stride(1),\n        BLOCK_SIZE_M=16,\n        BLOCK_SIZE_N=16,\n        BLOCK_SIZE_K=16,\n        GROUP_SIZE_M=8,\n    )\n    return c\n\ndef generated_torch_func(a, b):\n    \"\"\"\n    [Description: Performs matrix multiplication using PyTorch.]\n\n    Args:\n        a (torch.Tensor): First input matrix. [Shape: (M, K)]\n        b (torch.Tensor): Second input matrix. [Shape: (K, N)]\n\n    Returns:\n        torch.Tensor: Output matrix C = A @ B. [Shape: (M, N)]\n\n    Explanation:\n        1.  Use torch.matmul to perform matrix multiplication.\n        2.  Return the result.\n    \"\"\"\n    return torch.matmul(a, b)\n\nif __name__ == \"__main__\":\n    import torch\n    M_sizes = [256, 1024, 4096]\n    N_sizes = [256, 1024, 4096]\n    K_sizes = [256, 512, 1024, 2048, 4096]\n    def input_generator(M, N, K, device='cuda', dtype=torch.float16):\n        A = torch.randn(M, K, device=device, dtype=dtype)\n        A = torch.nn.functional.normalize(A, dim=-1)\n        B = torch.randn(K, N, device=device, dtype=dtype)\n        B = torch.nn.functional.normalize(B, dim=-1)\n        return A, B\n\n    from benchmark import verify_correctness_func, benchmark_performance_func\n    verify_correctness_func(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])\n    benchmark_performance_func(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])\n```\n\n```text\n### Test:\n\nTo test the code, save the above content as `matmul_triton.py` and ensure that `benchmark.py` is in the same directory.  Then run the following command.\n\n```bash\npython matmul_triton.py\n```\n\nThis will execute the main block of `matmul_triton.py`, which will first verify the correctness of the Triton implementation against the PyTorch implementation using `verify_correctness_func` and then benchmark the performance of both implementations using `benchmark_performance_func`.  The results of the correctness verification and performance benchmarking will be printed to the console and also saved to json files.  The performance benchmark also generates plots comparing the triton and pytorch implementations.\n</text>"
+                    }
+                ],
+                "role": "model"
+            },
+            "finishReason": "STOP",
+            "citationMetadata": {
+                "citationSources": [
+                    {
+                        "startIndex": 3827,
+                        "endIndex": 3990,
+                        "uri": "https://github.com/hgl71964/cuasmrl"
+                    },
+                    {
+                        "startIndex": 5866,
+                        "endIndex": 6087,
+                        "uri": "https://github.com/codingjin/tritontutorial"
+                    },
+                    {
+                        "startIndex": 6060,
+                        "endIndex": 6322,
+                        "uri": "https://github.com/sandeepkumar-skb/OpenAI-Triton-Kernels"
+                    }
+                ]
+            },
+            "avgLogprobs": -0.10156674187166577
+        }
+    ],
+    "usageMetadata": {
+        "promptTokenCount": 3771,
+        "candidatesTokenCount": 2554,
+        "totalTokenCount": 6325,
+        "promptTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 3771
+            }
+        ],
+        "candidatesTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 2554
+            }
+        ]
+    },
+    "modelVersion": "gemini-2.0-flash"
+}

@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_matmul/code_gen_gemini-flash_000/01/matmul_triton.py", line 8, in <module>
+    triton.Config({'BLOCK_SIZE_M': 128, 'BLOCK_SIZE_N': 256, 'BLOCK_SIZE_K': 64, 'GROUP_SIZE_M': 8}, prehook=lambda args: args['M'] > 64 and args['N'] > 64),
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: Config.__init__() got an unexpected keyword argument 'prehook'

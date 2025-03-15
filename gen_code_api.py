@@ -7,64 +7,9 @@ import aiohttp
 from google import genai
 from google.genai import types
 
-# read from $HOME/.key/gemini.api.key and set to gemini_api_key
-with open(os.path.expanduser("~/.keys/gemini.api.key"), "r") as f:
-    gemini_api_key = f.read().strip()
-
-gemini_client = genai.Client(api_key=gemini_api_key)
-
-async def gemini_gen(messages, log_folder="."):
-    response = gemini_client.models.generate_content(
-        model="gemini-2.0-flash",
-        # model="gemini-2.0-pro-exp-02-05",
-        config=types.GenerateContentConfig(
-            # response_mime_type="text/markdown",
-            # system_instruction="",
-        ),
-        contents=messages, # TODO check here: https://ai.google.dev/gemini-api/docs/quickstart?lang=rest
-    )
-    return response.text
-
-
-# read from $HOME/.key/fireworks.api.key and set to fireworks_api_key
-with open(os.path.expanduser("~/.keys/fireworks.api.key"), "r") as f:
-    fireworks_api_key = f.read().strip()
-fireworks_endpoint = "https://api.fireworks.ai/inference/v1/chat/completions"
-fireworks_model = "accounts/fireworks/models/deepseek-r1"
-
-# read from $HOME/.key/deepseek.api.key and set to deepseek_api_key
-with open(os.path.expanduser("~/.keys/deepseek.api.key"), "r") as f:
-    deepseek_api_key = f.read().strip()
-deepseek_endpoint = "https://api.deepseek.com/chat/completions"
-deepseek_model = "deepseek-reasoner"
-
-with open(os.path.expanduser("~/.keys/friendli.api.key"), "r") as f:
-    friendly_api_key = f.read().strip()
-friendly_endpoint = "https://api.friendli.ai/serverless/v1/chat/completions"
-friendly_model = "deepseek-r1"
-
-
-deepseek_provider = {
-    "url": fireworks_endpoint,
-    "model": fireworks_model,
-    "api_key": fireworks_api_key,
-}
-
-# deepseek_provider = {
-#    "url": friendly_endpoint,
-#    "model": friendly_model,
-#    "api_key": friendly_api_key,
-# }
-
-# deepseek_provider = {
-#     "url": deepseek_endpoint,
-#     "model": deepseek_model,
-#     "api_key": deepseek_api_key,
-# }
-
 async def post_data(url, data, headers):
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=data, headers=headers) as response:
+        async with session.post(url, json=data, headers=headers, timeout=900) as response:
             if response.status == 200:
                 return await response.json()
             else:
@@ -73,24 +18,126 @@ async def post_data(url, data, headers):
                 # throw an error
                 raise Exception("Error: ", response)
 
-async def deepseek_gen(messages, log_folder="."):
-    url = deepseek_provider["url"]
+# read from $HOME/.key/gemini.api.key and set to gemini_api_key
+gemini_api_key = None
+with open(os.path.expanduser("~/.keys/gemini.api.key"), "r") as f:
+    gemini_api_key = f.read().strip()
+
+# gemini_client = genai.Client(api_key=gemini_api_key)
+
+async def gemini_gen(messages, model="gemini-2.0-flash", api_key=gemini_api_key, log_folder="."):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
     payload = {
-        "model": deepseek_provider["model"],
-        # "max_tokens": 8192,
-        # "max_tokens": 20480,
-        "max_tokens": 40960,
-        "top_p": 1,
-        "top_k": 40,
-        "presence_penalty": 0,
-        "frequency_penalty": 0,
-        "temperature": 0.6,
-        "messages": messages
+        "contents": [{
+            "parts": [{
+                "text": messages[0]['content']
+            }]
+        }]
     }
+    headers = {
+        "Content-Type": "application/json",
+    }
+
+    # write request_messages to log file
+    with open(os.path.join(log_folder, "api_request.json"), "w") as f:
+        f.write(json.dumps(messages, indent=4))
+
+    # write request message content to log file
+    with open(os.path.join(log_folder, "api_request.md"), "w") as f:
+        # parse messages[0]['content']
+        json_content = json.loads(messages[0]['content'])
+        for content in json_content:
+            f.write(f"# {content['type']}")
+            f.write("\n")
+            if content['type'] == 'file':
+                f.write(f"```{content['filetype']}\n")
+                f.write(content['text'])
+                f.write("```)\n")
+            else:
+                f.write(content['text'])
+            f.write("\n\n")
+
+    response = await post_data(url, payload, headers)
+
+    # write response to log file
+    with open(os.path.join(log_folder, "api_response.json"), "w") as f:
+        f.write(json.dumps(response, indent=4))
+
+    result = response["candidates"][0]["content"]["parts"][0]["text"]
+    # if result starts with ```json and end with ```
+    if result.startswith("```json") and result.endswith("```"):
+        result = result[7:-3]
+        result = json.loads(result)
+        result = result[0]["text"]
+
+    with open(os.path.join(log_folder, "api_response.md"), "w") as f:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        f.write(f"Timestamp: {timestamp}\n\n")
+        f.write(result)
+
+    return result
+
+
+
+# read from $HOME/.key/deepseek.api.key and set to deepseek_api_key
+deepseek_api_key = None
+with open(os.path.expanduser("~/.keys/deepseek.api.key"), "r") as f:
+    deepseek_api_key = f.read().strip()
+deepseek_endpoint = "https://api.deepseek.com/chat/completions"
+deepseek_model = "deepseek-reasoner"
+
+# read from $HOME/.key/fireworks.api.key and set to fireworks_api_key
+fireworks_api_key = None
+with open(os.path.expanduser("~/.keys/fireworks.api.key"), "r") as f:
+    fireworks_api_key = f.read().strip()
+fireworks_endpoint = "https://api.fireworks.ai/inference/v1/chat/completions"
+fireworks_model = "accounts/fireworks/models/deepseek-r1"
+
+# read from $HOME/.key/friendli.api.key and set to friendly_api_key
+friendly_api_key = None
+with open(os.path.expanduser("~/.keys/friendli.api.key"), "r") as f:
+    friendly_api_key = f.read().strip()
+friendly_endpoint = "https://api.friendli.ai/serverless/v1/chat/completions"
+friendly_model = "deepseek-r1"
+
+async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, api_key=deepseek_api_key, log_folder="."):
+    if url == deepseek_endpoint:
+        payload = {
+            "model": model,
+            "messages": messages,
+            "frequency_penalty": 0,
+            # "max_tokens": 2048,
+            "max_tokens": 8192,
+            "presence_penalty": 0,
+            "response_format": {
+                "type": "text"
+            },
+            "stop": None,
+            "stream": False,
+            "stream_options": None,
+            # "temperature": 1,
+            "temperature": 0.6,
+            "top_p": 1,
+            "tools": None,
+            "tool_choice": "none",
+            "logprobs": False,
+            "top_logprobs": None
+        }
+    else:
+        payload = {
+            "model": model,
+            "max_tokens": 40960,
+            "top_p": 1,
+            "top_k": 40,
+            "presence_penalty": 0,
+            "frequency_penalty": 0,
+            "temperature": 0.6,
+            "messages": messages
+        }
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {deepseek_provider['api_key']}"
+        "Authorization": f"Bearer {api_key}"
     }
 
     # write request_messages to log file
@@ -113,7 +160,6 @@ async def deepseek_gen(messages, log_folder="."):
             f.write("\n\n")
 
     # response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
-    response = await post_data(url, payload, headers)
     response = await post_data(url, payload, headers)
 
     # write response to log file
@@ -210,8 +256,12 @@ async def claude_gen(messages, log_folder="."):
     return result
 
 API_ENDPOINTS = {
-    "gemini": gemini_gen,
-    "deepseek": deepseek_gen,
+    "gemini-flash": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.0-flash", log_folder=log_folder),
+    "gemini-pro": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.0-pro-exp-02-05", log_folder=log_folder),
+    "gemma": lambda messages, log_folder: gemini_gen(messages, model="gemma-3-27b-it", log_folder=log_folder),
+    "deepseek-ds": lambda messages, log_folder: deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, api_key=deepseek_api_key, log_folder=log_folder),
+    "deepseek-fd": lambda messages, log_folder: deepseek_gen(messages, url=friendly_endpoint, model=friendly_model, api_key=friendly_api_key, log_folder=log_folder),
+    "deepseek-fw": lambda messages, log_folder: deepseek_gen(messages, url=fireworks_endpoint, model=fireworks_model, api_key=fireworks_api_key, log_folder=log_folder),
     "claude": claude_gen,
 }
 

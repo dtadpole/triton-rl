@@ -261,7 +261,7 @@ async def processor(args, queue, id, timeout=1):
                 print(f"Max exceptions reached [{code_folder}]")
                 break
             else:
-                await asyncio.sleep(1)
+                await asyncio.sleep(3)
                 continue
 
     print("--------------------------------")
@@ -279,8 +279,8 @@ async def main(args):
     for i in range(args.parallel):
         task = asyncio.create_task(processor(args, queue, i))
         tasks.append(task)
-        # sleep for 1 seconds
-        await asyncio.sleep(1)
+        # sleep for 3 seconds
+        await asyncio.sleep(3)
 
     await asyncio.gather(*tasks)
 
@@ -288,13 +288,17 @@ async def main(args):
 if __name__ == "__main__":
     # parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--api", type=str, default="deepseek")
+    parser.add_argument("-a", "--api", type=str, default="deepseek-ds")
     parser.add_argument("-d", "--dir", type=str, default="./func_matmul")
     parser.add_argument("-b", "--breadth", type=int, default=4)
     parser.add_argument("-t", "--depth", type=int, default=3)
     parser.add_argument("-p", "--parallel", type=int, default=2)
     parser.add_argument("-x", "--max-exceptions", type=int, default=3)
     args = parser.parse_args()
+
+    if args.api not in API_ENDPOINTS.keys():
+        print(f"Invalid API: {args.api} (available APIs: {API_ENDPOINTS.keys()})")
+        exit(1)
 
     # check if directory exists
     if not os.path.exists(args.dir):

@@ -1,0 +1,53 @@
+Traceback (most recent call last):
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/core.py", line 35, in wrapper
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/core.py", line 1635, in load
+    return semantic.load(pointer, mask, other, boundary_check, padding_option, cache_modifier, eviction_policy,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/semantic.py", line 1141, in load
+    return _load_legacy(ptr, mask, other, boundary_check, padding, cache, eviction, is_volatile, builder)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/semantic.py", line 1089, in _load_legacy
+    mask = broadcast_impl_shape(mask, ptr.type.get_block_shapes(), builder)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/language/semantic.py", line 732, in broadcast_impl_shape
+    raise ValueError(f"Cannot broadcast, rank mismatch: {src_shape}, {shape}")
+ValueError: Cannot broadcast, rank mismatch: [16, 1, 16], [16, 16]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_matmul/code_gen_gemini-flash_000/02/matmul_triton.py", line 156, in <module>
+    verify_correctness_func(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
+  File "/home/centos/triton-rl/func_matmul/code_gen_gemini-flash_000/02/benchmark.py", line 36, in verify_correctness_func
+    triton_output = func_triton(*inputs) if isinstance(inputs, tuple) else func_triton(inputs)
+                    ^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/func_matmul/code_gen_gemini-flash_000/02/matmul_triton.py", line 113, in generated_triton_func
+    _matmul_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 623, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 273, in compile
+    module = src.make_ir(options, codegen_fns, module_map, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 100, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 77:12:
+    accumulator = tl.zeros((BLOCK_SIZE_M, BLOCK_SIZE_N), dtype=tl.float32)
+    for k in range(0, K, BLOCK_SIZE_K):
+        # inner loop
+        off_k = tl.arange(0, BLOCK_SIZE_K)
+        a_ptrs = A + (block_start_m + off_m[:, None]) * stride_am + (k + off_k[None, :]) * stride_ak
+        b_ptrs = B + (k + off_k[:, None]) * stride_bk + (block_start_n + off_n[None, :]) * stride_bn
+
+        a_mask = (k + off_k[None, :]) < K
+        b_mask = (k + off_k[:, None]) < K
+
+        a = tl.load(a_ptrs, mask=mask_m[:, None] & a_mask, other=0.0)
+        b = tl.load(b_ptrs, mask=b_mask[:, None] & mask_n[None, :], other=0.0)
+            ^

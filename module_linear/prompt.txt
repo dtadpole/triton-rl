@@ -1,4 +1,4 @@
-Generate Triton module (TritonLinear) for PyTorch nn.linear, implement both forward and backward. (filename: triton_linear.py)
+Generate Triton module (TritonLinear) for PyTorch nn.linear, implement both forward and backward. (filename: linear_triton.py)
     use autotune for block sizes (BLOCK_SIZE_B, BLOCK_SIZE_I, BLOCK_SIZE_O) in both forward and backward kernels, use super blocks and autotune corresponding GROUP_SIZE_*,
     test correctness and performance using following code literally:
 ```python
