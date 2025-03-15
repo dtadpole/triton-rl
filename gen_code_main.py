@@ -3,6 +3,7 @@ import datetime
 import subprocess
 import json
 import asyncio
+import time
 from google import genai
 from google.genai import types
 from prompts import FUNC_BASE_PROMPTS, FIX_PROMPTS
@@ -72,6 +73,28 @@ def fix_messages(args, folder_name, err_message):
     ]
     return messages
 
+async def run_command_async(cmd):
+    """Run a shell command asynchronously and capture its output."""
+    start_time = time.time()
+
+    process = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        env=os.environ
+    )
+    stdout, stderr = await process.communicate()
+
+    end_time = time.time()
+    duration = end_time - start_time
+
+    return {
+        'cmd': cmd,
+        'stdout': stdout.decode('utf-8'),
+        'stderr': stderr.decode('utf-8'),
+        'returncode': process.returncode,
+        'duration': duration
+    }
 
 async def processor(args, queue, id, timeout=1):
 
@@ -189,22 +212,24 @@ async def processor(args, queue, id, timeout=1):
         print("--------------------------------")
         print(cmd)
         print("--------------------------------")
-        # run command and print output and error separately, use subprocess.run
-        process = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ)
-        STDOUT_MESSAGE = process.stdout.decode('utf-8')
+        result = await run_command_async(cmd)
+        print("--------------------------------")
+        print(cmd)
+        print("--------------------------------")
+        STDOUT_MESSAGE = result["stdout"]
         if STDOUT_MESSAGE != "":
             with open(os.path.join(code_folder, "code.stdout"), "w") as f:
                 f.write(STDOUT_MESSAGE)
         print(STDOUT_MESSAGE)
         print("--------------------------------")
-        STDERR_MESSAGE = process.stderr.decode('utf-8')
+        STDERR_MESSAGE = result["stderr"]
         if STDERR_MESSAGE != "":
             with open(os.path.join(code_folder, "code.stderr"), "w") as f:
                 f.write(STDERR_MESSAGE)
         print(STDERR_MESSAGE)
         print("--------------------------------")
         # get the exit code
-        exit_code = process.returncode
+        exit_code = result["returncode"]
         if exit_code != 0:
             print(f"Test failed with exit code {exit_code} [{code_folder}]")
             # write ".failed" to the code_folder_name
