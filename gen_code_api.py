@@ -99,7 +99,8 @@ fireworks_api_key = None
 with open(os.path.expanduser("~/.keys/fireworks.api.key"), "r") as f:
     fireworks_api_key = f.read().strip()
 fireworks_endpoint = "https://api.fireworks.ai/inference/v1/chat/completions"
-fireworks_model = "accounts/fireworks/models/deepseek-r1"
+fireworks_ds_model = "accounts/fireworks/models/deepseek-r1"
+fireworks_qwq_model = "accounts/fireworks/models/qwq-32b"
 
 # read from $HOME/.key/friendli.api.key and set to friendly_api_key
 friendly_api_key = None
@@ -263,14 +264,65 @@ async def claude_gen(messages, log_folder="."):
 
     return result
 
+async def qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, api_key=fireworks_api_key, log_folder="."):
+    payload = {
+        "model": model,
+        # "max_tokens": 16384,
+        "max_tokens": 81920,
+        "top_p": 1,
+        "top_k": 40,
+        "presence_penalty": 0,
+        "frequency_penalty": 0,
+        "temperature": 0.6,
+        "messages": messages
+    }
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    # write request_messages to log file
+    with open(os.path.join(log_folder, "api_request.json"), "w") as f:
+        f.write(json.dumps(messages, indent=4))
+
+    # write request message content to log file
+    with open(os.path.join(log_folder, "api_request.md"), "w") as f:
+        # parse messages[0]['content']
+        json_content = json.loads(messages[0]['content'])
+        for content in json_content:
+            f.write(f"# {content['type']}")
+            f.write("\n")
+            if content['type'] == 'file':
+                f.write(f"```{content['filetype']}\n")
+                f.write(content['text'])
+                f.write("```)\n")
+            else:
+                f.write(content['text'])
+            f.write("\n\n")
+
+    response = await post_data(url, payload, headers)
+
+    # write response to log file
+    with open(os.path.join(log_folder, "api_response.json"), "w") as f:
+        f.write(json.dumps(response, indent=4))
+
+    with open(os.path.join(log_folder, "api_response.md"), "w") as f:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        f.write(f"Timestamp: {timestamp}\n\n")
+        f.write(response["choices"][0]["message"]["content"])
+
+    return response["choices"][0]["message"]["content"]
+
 API_ENDPOINTS = {
     "gemini-flash": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.0-flash", log_folder=log_folder),
     "gemini-pro": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.0-pro-exp-02-05", log_folder=log_folder),
     "gemma": lambda messages, log_folder: gemini_gen(messages, model="gemma-3-27b-it", log_folder=log_folder),
     "deepseek-ds": lambda messages, log_folder: deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, api_key=deepseek_api_key, log_folder=log_folder),
     "deepseek-fd": lambda messages, log_folder: deepseek_gen(messages, url=friendly_endpoint, model=friendly_model, api_key=friendly_api_key, log_folder=log_folder),
-    "deepseek-fw": lambda messages, log_folder: deepseek_gen(messages, url=fireworks_endpoint, model=fireworks_model, api_key=fireworks_api_key, log_folder=log_folder),
+    "deepseek-fw": lambda messages, log_folder: deepseek_gen(messages, url=fireworks_endpoint, model=fireworks_ds_model, api_key=fireworks_api_key, log_folder=log_folder),
     "claude": claude_gen,
+    "qwq-fw": lambda messages, log_folder: qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, api_key=fireworks_api_key, log_folder=log_folder)
 }
 
 if __name__ == "__main__":
