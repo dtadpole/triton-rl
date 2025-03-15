@@ -1,1 +1,0 @@
-python linear_triton.py

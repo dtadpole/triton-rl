@@ -1,0 +1,83 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/module_linear/code_gen_claude_001/01/linear_triton.py", line 613, in <module>
+    verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
+  File "/home/centos/triton-rl/module_linear/code_gen_claude_001/01/benchmark.py", line 62, in verify_correctness_forward
+    triton_output = triton_module(*inputs) if isinstance(inputs, tuple) else triton_module(inputs)
+                                                                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_claude_001/01/linear_triton.py", line 594, in forward
+    return LinearFunction.apply(x, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/torch/autograd/function.py", line 575, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_claude_001/01/linear_triton.py", line 459, in forward
+    output = linear_forward(input, weight, bias)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_claude_001/01/linear_triton.py", line 184, in linear_forward
+    linear_forward_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 186, in run
+    timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 166, in _bench
+    return self.do_bench(kernel_call, quantiles=(0.5, 0.2, 0.8))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/testing.py", line 117, in do_bench
+    fn()
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 152, in kernel_call
+    self.fn.run(
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 623, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 722, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 148, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 202, in visit_Assign
+    self.generic_visit(node)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 141, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language' has no attribute 'get_dtype'

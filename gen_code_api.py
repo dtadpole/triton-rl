@@ -67,8 +67,16 @@ async def gemini_gen(messages, model="gemini-2.0-flash", api_key=gemini_api_key,
     # if result starts with ```json and end with ```
     if result.startswith("```json") and result.endswith("```"):
         result = result[7:-3]
-        result = json.loads(result)
-        result = result[0]["text"]
+        # decode json encoded string
+        # result = result.replace("\\n", "\n").replace("\\t", "\t").replace("\\r", "\r").replace('\\"', '"')
+        # result = result.encode('unicode_escape').decode('unicode_escape')
+        # result = result.encode('unicode_escape').decode('unicode_escape')
+        result = (result.encode('latin1') # To bytes, required by 'unicode-escape'
+                 .decode('unicode-escape') # Perform the actual octal-escaping decode
+                 .encode('latin1')         # 1:1 mapping back to bytes
+                 .decode('utf-8'))        # Decode original encoding
+        # result = json.loads(result)
+        # result = result[0]["text"]
 
     with open(os.path.join(log_folder, "api_response.md"), "w") as f:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")

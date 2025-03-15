@@ -258,7 +258,7 @@ async def processor(args, queue, id, timeout=1):
                 f.write("--------------------------------\n")
             print("--------------------------------")
             if exception_count >= args.max_exceptions:
-                print(f"Max exceptions reached [{code_folder}]")
+                print(f"Processor {id}: max exceptions reached [{code_folder}]")
                 break
             else:
                 await asyncio.sleep(3)
