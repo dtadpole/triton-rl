@@ -1,0 +1,58 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_000/00/softmax_triton.py", line 122, in <module>
+    verify_correctness_func(softmax_triton, softmax_torch, input_generator, [batch_sizes, dim_sizes])
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_000/00/benchmark.py", line 36, in verify_correctness_func
+    triton_output = func_triton(*inputs) if isinstance(inputs, tuple) else func_triton(inputs)
+                                                                           ^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/func_softmax/code_gen_deepseek_000/00/softmax_triton.py", line 88, in softmax_triton
+    softmax_kernel[grid](
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 623, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 231, in compile
+    key = f"{triton_key()}-{src.hash()}-{backend.hash()}-{options.hash()}-{str(sorted(env_vars.items()))}"
+                            ^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/compiler/compiler.py", line 96, in hash
+    key = f"{self.fn.cache_key}-{self.attrs.hash()}-{sorted_sig}-{sorted_constants}"
+             ^^^^^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 722, in cache_key
+    dependencies_finder.visit(self.parse())
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 148, in visit_FunctionDef
+    self.generic_visit(node)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 415, in generic_visit
+    self.visit(item)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 202, in visit_Assign
+    self.generic_visit(node)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 417, in generic_visit
+    self.visit(value)
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/ast.py", line 407, in visit
+    return visitor(node)
+           ^^^^^^^^^^^^^
+  File "/home/centos/miniconda3/envs/torch26/lib/python3.12/site-packages/triton/runtime/jit.py", line 141, in visit_Attribute
+    ret = getattr(lhs, node.attr)
+          ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'triton.language' has no attribute 'infinity'
