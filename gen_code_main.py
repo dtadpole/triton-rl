@@ -66,8 +66,8 @@ def codegen_messages(args, folder_name):
             ]
         },
     ]
-    # list folder with all files ending with .py and not starting with '_'
-    files = [f for f in os.listdir(folder_name) if f.endswith(".py") and not f.startswith("_")]
+    # list folder with all files ending with .py
+    files = [f for f in os.listdir(folder_name) if f.endswith(".py")]
     for file in files:
         with open(os.path.join(folder_name, file), "r") as f:
             messages[0]["content"].append({
