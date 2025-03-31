@@ -1,0 +1,22 @@
+W0331 03:52:30.708000 2689612 torch/_inductor/utils.py:1137] [0/0] Not enough SMs to use max_autotune_gemm mode
+W0331 03:52:32.393000 2689612 torch/_dynamo/convert_frame.py:906] [0/8] torch._dynamo hit config.cache_size_limit (8)
+W0331 03:52:32.393000 2689612 torch/_dynamo/convert_frame.py:906] [0/8]    function: 'matmul_torch' (/home/centos/triton-rl/func_matmul/code_gen_gemini-pro_000/01/matmul_triton.py:216)
+W0331 03:52:32.393000 2689612 torch/_dynamo/convert_frame.py:906] [0/8]    last reason: 0/0: tensor 'L['A']' size mismatch at index 0. expected 256, actual 1024
+W0331 03:52:32.393000 2689612 torch/_dynamo/convert_frame.py:906] [0/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0331 03:52:32.393000 2689612 torch/_dynamo/convert_frame.py:906] [0/8] To diagnose recompilation issues, see https://pytorch.org/docs/main/torch.compiler_troubleshooting.html.
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/func_matmul/code_gen_gemini-pro_000/01/matmul_triton.py", line 272, in <module>
+    median_triton, median_pytorch, median_speedup, performance_results = benchmark_performance_func(generated_triton_func, generated_torch_func, input_generator, [M_sizes, N_sizes, K_sizes])
+  File "/home/centos/triton-rl/func_matmul/code_gen_gemini-pro_000/01/benchmark.py", line 151, in benchmark_performance_func
+    _plot_benchmark_results(configs, timings_triton, timings_pytorch, speedups, label="func")
+  File "/home/centos/triton-rl/func_matmul/code_gen_gemini-pro_000/01/_benchmark_util.py", line 181, in _plot_benchmark_results
+    plt.plot(config_strs, timings_triton, 'o-', label='Triton')
+  File "/home/centos/triton-cr/venv/lib/python3.10/site-packages/matplotlib/pyplot.py", line 3827, in plot
+    return gca().plot(
+  File "/home/centos/triton-cr/venv/lib/python3.10/site-packages/matplotlib/axes/_axes.py", line 1777, in plot
+    lines = [*self._get_lines(self, *args, data=data, **kwargs)]
+  File "/home/centos/triton-cr/venv/lib/python3.10/site-packages/matplotlib/axes/_base.py", line 297, in __call__
+    yield from self._plot_args(
+  File "/home/centos/triton-cr/venv/lib/python3.10/site-packages/matplotlib/axes/_base.py", line 494, in _plot_args
+    raise ValueError(f"x and y must have same first dimension, but "
+ValueError: x and y must have same first dimension, but have shapes (0,) and (45,)

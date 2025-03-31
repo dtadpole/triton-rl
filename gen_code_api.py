@@ -316,7 +316,7 @@ async def qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, a
 
 API_ENDPOINTS = {
     "gemini-flash": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.0-flash", log_folder=log_folder),
-    "gemini-pro": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.0-pro-exp-02-05", log_folder=log_folder),
+    "gemini-pro": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.5-pro-exp-03-25", log_folder=log_folder),
     "gemma": lambda messages, log_folder: gemini_gen(messages, model="gemma-3-27b-it", log_folder=log_folder),
     "deepseek-ds": lambda messages, log_folder: deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, api_key=deepseek_api_key, log_folder=log_folder),
     "deepseek-fd": lambda messages, log_folder: deepseek_gen(messages, url=friendly_endpoint, model=friendly_model, api_key=friendly_api_key, log_folder=log_folder),

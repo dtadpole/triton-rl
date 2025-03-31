@@ -178,3 +178,4 @@ grpo_saved_lora/
 grpo_trainer_lora_model/
 code_gen_*/
 *.png
+*.json

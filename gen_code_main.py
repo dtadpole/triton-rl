@@ -288,9 +288,9 @@ async def main(args):
 if __name__ == "__main__":
     # parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--api", type=str, default="deepseek-ds")
+    parser.add_argument("-a", "--api", type=str, default="deepseek-fw")
     parser.add_argument("-d", "--dir", type=str, default="./func_matmul")
-    parser.add_argument("-b", "--breadth", type=int, default=4)
+    parser.add_argument("-b", "--breadth", type=int, default=3)
     parser.add_argument("-t", "--depth", type=int, default=3)
     parser.add_argument("-p", "--parallel", type=int, default=2)
     parser.add_argument("-x", "--max-exceptions", type=int, default=3)
@@ -307,7 +307,7 @@ if __name__ == "__main__":
 
     # check if prompt.txt exists
     if not os.path.exists(os.path.join(args.dir, "prompt.txt")):
-        print(f"Prompt file {os.path.join(args.dir, "prompt.txt")} does not exist")
+        print(f"Prompt file {os.path.join(args.dir, 'prompt.txt')} does not exist")
         exit(1)
 
     # check if test.command exists

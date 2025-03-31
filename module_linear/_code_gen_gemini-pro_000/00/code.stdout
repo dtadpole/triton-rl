@@ -1,0 +1,6 @@
+Running benchmarks with dtype=torch.float16 on device=cuda
+B sizes: [256, 1024, 4096]
+I sizes: [256, 1024, 4096]
+O sizes: [256, 1024, 4096]
+------------------------------
+Verifying Forward Pass Correctness...

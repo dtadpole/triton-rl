@@ -1,0 +1,16 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/module_linear/code_gen_gemini-pro_000/00/linear_triton.py", line 651, in <module>
+    verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes], dtype=dtype, atol=1e-1, rtol=1e-1) # Relaxed tolerance for FP16
+  File "/home/centos/triton-rl/module_linear/code_gen_gemini-pro_000/00/benchmark.py", line 66, in verify_correctness_forward
+    triton_output = triton_module(*inputs) if isinstance(inputs, tuple) else triton_module(inputs)
+  File "/home/centos/triton-cr/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/centos/triton-cr/venv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/centos/triton-rl/module_linear/code_gen_gemini-pro_000/00/linear_triton.py", line 599, in forward
+    return _Linear.apply(input, self.weight)
+  File "/home/centos/triton-cr/venv/lib/python3.10/site-packages/torch/autograd/function.py", line 575, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+  File "/home/centos/triton-rl/module_linear/code_gen_gemini-pro_000/00/linear_triton.py", line 426, in forward
+    config = linear_forward_kernel.get_best_config(B=B, I=I, O=O)
+AttributeError: 'Autotuner' object has no attribute 'get_best_config'
