@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/01/linear_triton.py", line 303, in <module>
+    verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/01/benchmark.py", line 63, in verify_correctness_forward
+    _copy_parameters(torch_module, triton_module)
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/01/_benchmark_util.py", line 120, in _copy_parameters
+    target_param.data.copy_(source_param.data)
+RuntimeError: The size of tensor a (1024) must match the size of tensor b (256) at non-singleton dimension 1
