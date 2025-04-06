@@ -102,9 +102,13 @@ with open(os.path.expanduser("~/.keys/fireworks.api.key"), "r") as f:
     fireworks_api_key = f.read().strip()
 fireworks_endpoint = "https://api.fireworks.ai/inference/v1/chat/completions"
 # fireworks_ds_model = "accounts/fireworks/models/deepseek-r1"
-fireworks_ds_model = "accounts/fireworks/models/deepseek-r1-basic"
+fireworks_ds_r1_model = "accounts/fireworks/models/deepseek-r1-basic"
+fireworks_ds_v3_model = "accounts/fireworks/models/deepseek-v3-0324"
 fireworks_qwq_model = "accounts/fireworks/models/qwq-32b"
-
+fireworks_llama_4_maverick_model = (
+    "accounts/fireworks/models/llama4-maverick-instruct-basic"
+)
+fireworks_llama_4_scout_model = "accounts/fireworks/models/llama4-scout-instruct-basic"
 # read from $HOME/.key/friendli.api.key and set to friendly_api_key
 friendly_api_key = None
 with open(os.path.expanduser("~/.keys/friendli.api.key"), "r") as f:
@@ -358,10 +362,17 @@ API_ENDPOINTS = {
         api_key=friendly_api_key,
         log_folder=log_folder,
     ),
-    "deepseek-fw": lambda messages, log_folder: deepseek_gen(
+    "deepseek-fw-r1": lambda messages, log_folder: deepseek_gen(
         messages,
         url=fireworks_endpoint,
-        model=fireworks_ds_model,
+        model=fireworks_ds_r1_model,
+        api_key=fireworks_api_key,
+        log_folder=log_folder,
+    ),
+    "deepseek-fw-v3": lambda messages, log_folder: deepseek_gen(
+        messages,
+        url=fireworks_endpoint,
+        model=fireworks_ds_v3_model,
         api_key=fireworks_api_key,
         log_folder=log_folder,
     ),
@@ -370,6 +381,20 @@ API_ENDPOINTS = {
         messages,
         url=fireworks_endpoint,
         model=fireworks_qwq_model,
+        api_key=fireworks_api_key,
+        log_folder=log_folder,
+    ),
+    "llama-4-maverick": lambda messages, log_folder: deepseek_gen(
+        messages,
+        url=fireworks_endpoint,
+        model=fireworks_llama_4_maverick_model,
+        api_key=fireworks_api_key,
+        log_folder=log_folder,
+    ),
+    "llama-4-scout": lambda messages, log_folder: deepseek_gen(
+        messages,
+        url=fireworks_endpoint,
+        model=fireworks_llama_4_scout_model,
         api_key=fireworks_api_key,
         log_folder=log_folder,
     ),

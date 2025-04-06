@@ -1,0 +1,37 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw-r1_004/00/linear_triton.py", line 289, in <module>
+    verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw-r1_004/00/benchmark.py", line 66, in verify_correctness_forward
+    triton_output = triton_module(*inputs) if isinstance(inputs, tuple) else triton_module(inputs)
+                                                                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw-r1_004/00/linear_triton.py", line 17, in forward
+    return TritonLinearFunction.apply(x, self.weight)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/torch/autograd/function.py", line 575, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw-r1_004/00/linear_triton.py", line 23, in forward
+    return linear_forward_triton(x, weight)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw-r1_004/00/linear_triton.py", line 108, in linear_forward_triton
+    linear_forward_kernel[grid](
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 203, in run
+    ret = self.fn.run(
+          ^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/runtime/jit.py", line 653, in run
+    kernel.run(grid_0, grid_1, grid_2, stream, kernel.function, kernel.packed_metadata, launch_metadata,
+    ^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/compiler/compiler.py", line 395, in __getattribute__
+    self._init_handles()
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/compiler/compiler.py", line 388, in _init_handles
+    raise OutOfResources(self.metadata.shared, max_shared, "shared memory")
+triton.runtime.errors.OutOfResources: out of resource: shared memory, Required: 262144, Hardware limit: 101376. Reducing block sizes or `num_stages` may help.

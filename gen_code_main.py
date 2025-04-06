@@ -315,7 +315,7 @@ async def main(args):
 if __name__ == "__main__":
     # parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--api", type=str, default="deepseek-fw")
+    parser.add_argument("-a", "--api", type=str, default="deepseek-fw-r1")
     parser.add_argument("-d", "--dir", type=str, default="./func_matmul")
     parser.add_argument("-b", "--breadth", type=int, default=4)
     parser.add_argument("-t", "--depth", type=int, default=3)
