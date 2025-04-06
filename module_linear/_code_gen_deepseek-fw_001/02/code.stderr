@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/02/linear_triton.py", line 283, in <module>
+    verify_correctness_forward(module_generator, forward_generator, [B_sizes, I_sizes, O_sizes])
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/02/benchmark.py", line 66, in verify_correctness_forward
+    triton_output = triton_module(*inputs) if isinstance(inputs, tuple) else triton_module(inputs)
+                                                                             ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/02/linear_triton.py", line 265, in forward
+    return _TritonLinearFunction.apply(x, self.weight)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/torch/autograd/function.py", line 575, in apply
+    return super().apply(*args, **kwargs)  # type: ignore[misc]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/02/linear_triton.py", line 204, in forward
+    _forward_kernel[grid](
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/runtime/jit.py", line 330, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 186, in run
+    timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/centos/triton-rl/.venv/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 141, in _bench
+    raise ValueError(f"Conflicting meta-parameters: {', '.join(conflicts)}."
+ValueError: Conflicting meta-parameters: GROUP_SIZE_B. Make sure that you don't re-define auto-tuned symbols.

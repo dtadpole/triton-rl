@@ -1,0 +1,10 @@
+W0406 04:42:01.918000 3688082 torch/_dynamo/convert_frame.py:906] [0/8] torch._dynamo hit config.cache_size_limit (8)
+W0406 04:42:01.918000 3688082 torch/_dynamo/convert_frame.py:906] [0/8]    function: 'forward' (/home/centos/triton-rl/module_linear/code_gen_deepseek-fw_002/01/01/linear_triton.py:26)
+W0406 04:42:01.918000 3688082 torch/_dynamo/convert_frame.py:906] [0/8]    last reason: 0/0: tensor 'L['self']._parameters['weight']' size mismatch at index 0. expected 256, actual 4096. Guard failed on a parameter, consider using torch._dynamo.config.force_parameter_static_shapes = False to allow dynamism on parameters.
+W0406 04:42:01.918000 3688082 torch/_dynamo/convert_frame.py:906] [0/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0406 04:42:01.918000 3688082 torch/_dynamo/convert_frame.py:906] [0/8] To diagnose recompilation issues, see https://pytorch.org/docs/main/torch.compiler_troubleshooting.html.
+W0406 04:42:02.077000 3688082 torch/_dynamo/convert_frame.py:906] [2/8] torch._dynamo hit config.cache_size_limit (8)
+W0406 04:42:02.077000 3688082 torch/_dynamo/convert_frame.py:906] [2/8]    function: 'inner' (/home/centos/triton-rl/.venv/lib/python3.12/site-packages/torch/_dynamo/external_utils.py:43)
+W0406 04:42:02.077000 3688082 torch/_dynamo/convert_frame.py:906] [2/8]    last reason: 2/0: tensor 'L['fn']._parameters['weight']' size mismatch at index 0. expected 256, actual 4096. Guard failed on a parameter, consider using torch._dynamo.config.force_parameter_static_shapes = False to allow dynamism on parameters.
+W0406 04:42:02.077000 3688082 torch/_dynamo/convert_frame.py:906] [2/8] To log all recompilation reasons, use TORCH_LOGS="recompiles".
+W0406 04:42:02.077000 3688082 torch/_dynamo/convert_frame.py:906] [2/8] To diagnose recompilation issues, see https://pytorch.org/docs/main/torch.compiler_troubleshooting.html.
