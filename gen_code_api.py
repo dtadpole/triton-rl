@@ -7,9 +7,12 @@ import aiohttp
 from google import genai
 from google.genai import types
 
+
 async def post_data(url, data, headers):
     async with aiohttp.ClientSession() as session:
-        async with session.post(url, json=data, headers=headers, timeout=900) as response:
+        async with session.post(
+            url, json=data, headers=headers, timeout=900
+        ) as response:
             if response.status == 200:
                 return await response.json()
             else:
@@ -18,6 +21,7 @@ async def post_data(url, data, headers):
                 # throw an error
                 raise Exception("Error: ", response)
 
+
 # read from $HOME/.key/gemini.api.key and set to gemini_api_key
 gemini_api_key = None
 with open(os.path.expanduser("~/.keys/gemini.api.key"), "r") as f:
@@ -25,15 +29,12 @@ with open(os.path.expanduser("~/.keys/gemini.api.key"), "r") as f:
 
 # gemini_client = genai.Client(api_key=gemini_api_key)
 
-async def gemini_gen(messages, model="gemini-2.0-flash", api_key=gemini_api_key, log_folder="."):
+
+async def gemini_gen(
+    messages, model="gemini-2.0-flash", api_key=gemini_api_key, log_folder="."
+):
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-    payload = {
-        "contents": [{
-            "parts": [{
-                "text": messages[0]['content']
-            }]
-        }]
-    }
+    payload = {"contents": [{"parts": [{"text": messages[0]["content"]}]}]}
     headers = {
         "Content-Type": "application/json",
     }
@@ -45,16 +46,16 @@ async def gemini_gen(messages, model="gemini-2.0-flash", api_key=gemini_api_key,
     # write request message content to log file
     with open(os.path.join(log_folder, "api_request.md"), "w") as f:
         # parse messages[0]['content']
-        json_content = json.loads(messages[0]['content'])
+        json_content = json.loads(messages[0]["content"])
         for content in json_content:
             f.write(f"# {content['type']}")
             f.write("\n")
-            if content['type'] == 'file':
+            if content["type"] == "file":
                 f.write(f"```{content['filetype']}\n")
-                f.write(content['text'])
+                f.write(content["text"])
                 f.write("```)\n")
             else:
-                f.write(content['text'])
+                f.write(content["text"])
             f.write("\n\n")
 
     response = await post_data(url, payload, headers)
@@ -71,10 +72,12 @@ async def gemini_gen(messages, model="gemini-2.0-flash", api_key=gemini_api_key,
         # result = result.replace("\\n", "\n").replace("\\t", "\t").replace("\\r", "\r").replace('\\"', '"')
         # result = result.encode('unicode_escape').decode('unicode_escape')
         # result = result.encode('unicode_escape').decode('unicode_escape')
-        result = (result.encode('latin1') # To bytes, required by 'unicode-escape'
-                 .decode('unicode-escape') # Perform the actual octal-escaping decode
-                 .encode('latin1')         # 1:1 mapping back to bytes
-                 .decode('utf-8'))        # Decode original encoding
+        result = (
+            result.encode("latin1")  # To bytes, required by 'unicode-escape'
+            .decode("unicode-escape")  # Perform the actual octal-escaping decode
+            .encode("latin1")  # 1:1 mapping back to bytes
+            .decode("utf-8")
+        )  # Decode original encoding
         # result = json.loads(result)
         # result = result[0]["text"]
 
@@ -84,7 +87,6 @@ async def gemini_gen(messages, model="gemini-2.0-flash", api_key=gemini_api_key,
         f.write(result)
 
     return result
-
 
 
 # read from $HOME/.key/deepseek.api.key and set to deepseek_api_key
@@ -99,7 +101,8 @@ fireworks_api_key = None
 with open(os.path.expanduser("~/.keys/fireworks.api.key"), "r") as f:
     fireworks_api_key = f.read().strip()
 fireworks_endpoint = "https://api.fireworks.ai/inference/v1/chat/completions"
-fireworks_ds_model = "accounts/fireworks/models/deepseek-r1"
+# fireworks_ds_model = "accounts/fireworks/models/deepseek-r1"
+fireworks_ds_model = "accounts/fireworks/models/deepseek-r1-basic"
 fireworks_qwq_model = "accounts/fireworks/models/qwq-32b"
 
 # read from $HOME/.key/friendli.api.key and set to friendly_api_key
@@ -109,7 +112,14 @@ with open(os.path.expanduser("~/.keys/friendli.api.key"), "r") as f:
 friendly_endpoint = "https://api.friendli.ai/serverless/v1/chat/completions"
 friendly_model = "deepseek-r1"
 
-async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, api_key=deepseek_api_key, log_folder="."):
+
+async def deepseek_gen(
+    messages,
+    url=deepseek_endpoint,
+    model=deepseek_model,
+    api_key=deepseek_api_key,
+    log_folder=".",
+):
     if url == deepseek_endpoint:
         payload = {
             "model": model,
@@ -118,9 +128,7 @@ async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, ap
             # "max_tokens": 2048,
             "max_tokens": 8192,
             "presence_penalty": 0,
-            "response_format": {
-                "type": "text"
-            },
+            "response_format": {"type": "text"},
             "stop": None,
             "stream": False,
             "stream_options": None,
@@ -130,7 +138,7 @@ async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, ap
             "tools": None,
             "tool_choice": "none",
             "logprobs": False,
-            "top_logprobs": None
+            "top_logprobs": None,
         }
     else:
         payload = {
@@ -141,12 +149,12 @@ async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, ap
             "presence_penalty": 0,
             "frequency_penalty": 0,
             "temperature": 0.6,
-            "messages": messages
+            "messages": messages,
         }
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
+        "Authorization": f"Bearer {api_key}",
     }
 
     # write request_messages to log file
@@ -156,16 +164,16 @@ async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, ap
     # write request message content to log file
     with open(os.path.join(log_folder, "api_request.md"), "w") as f:
         # parse messages[0]['content']
-        json_content = json.loads(messages[0]['content'])
+        json_content = json.loads(messages[0]["content"])
         for content in json_content:
             f.write(f"# {content['type']}")
             f.write("\n")
-            if content['type'] == 'file':
+            if content["type"] == "file":
                 f.write(f"```{content['filetype']}\n")
-                f.write(content['text'])
+                f.write(content["text"])
                 f.write("```)\n")
             else:
-                f.write(content['text'])
+                f.write(content["text"])
             f.write("\n\n")
 
     # response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
@@ -181,7 +189,10 @@ async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, ap
 
         if "content" in response["choices"][0]["message"]:
             # if response_message has a "reasoner-content" key, write it to the log file
-            if "reasoning_content" in response["choices"][0]["message"] and response["choices"][0]["message"]["reasoning_content"]:
+            if (
+                "reasoning_content" in response["choices"][0]["message"]
+                and response["choices"][0]["message"]["reasoning_content"]
+            ):
                 f.write("<think>\n")
                 f.write(response["choices"][0]["message"]["reasoning_content"])
                 f.write("\n</think>\n")
@@ -195,6 +206,7 @@ async def deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, ap
 
 with open(os.path.expanduser("~/.keys/claude.api.key"), "r") as f:
     claude_api_key = f.read().strip()
+
 
 async def claude_gen(messages, log_folder="."):
     url = "https://api.anthropic.com/v1/messages"
@@ -226,16 +238,16 @@ async def claude_gen(messages, log_folder="."):
             f.write(f"# {message['role']}")
             f.write("\n")
             # parse json content
-            json_content = json.loads(message['content'])
+            json_content = json.loads(message["content"])
             for content in json_content:
                 f.write(f"# {content['type']}")
                 f.write("\n")
-                if content['type'] == 'file':
+                if content["type"] == "file":
                     f.write(f"```{content['filetype']}\n")
-                    f.write(content['text'])
+                    f.write(content["text"])
                     f.write("```\n")
                 else:
-                    f.write(content['text'])
+                    f.write(content["text"])
                 f.write("\n\n")
 
     # response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
@@ -255,16 +267,23 @@ async def claude_gen(messages, log_folder="."):
             # iterate key value pairs
             f.write(f"# {content['type']}")
             f.write("\n")
-            if content['type'] == 'thinking':
-                f.write(content['thinking'])
-            elif content['type'] == 'text':
-                f.write(content['text'])
-                result += content['text']
+            if content["type"] == "thinking":
+                f.write(content["thinking"])
+            elif content["type"] == "text":
+                f.write(content["text"])
+                result += content["text"]
             f.write("\n\n")
 
     return result
 
-async def qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, api_key=fireworks_api_key, log_folder="."):
+
+async def qwq_gen(
+    messages,
+    url=fireworks_endpoint,
+    model=fireworks_qwq_model,
+    api_key=fireworks_api_key,
+    log_folder=".",
+):
     payload = {
         "model": model,
         # "max_tokens": 16384,
@@ -274,12 +293,12 @@ async def qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, a
         "presence_penalty": 0,
         "frequency_penalty": 0,
         "temperature": 0.6,
-        "messages": messages
+        "messages": messages,
     }
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
+        "Authorization": f"Bearer {api_key}",
     }
 
     # write request_messages to log file
@@ -289,16 +308,16 @@ async def qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, a
     # write request message content to log file
     with open(os.path.join(log_folder, "api_request.md"), "w") as f:
         # parse messages[0]['content']
-        json_content = json.loads(messages[0]['content'])
+        json_content = json.loads(messages[0]["content"])
         for content in json_content:
             f.write(f"# {content['type']}")
             f.write("\n")
-            if content['type'] == 'file':
+            if content["type"] == "file":
                 f.write(f"```{content['filetype']}\n")
-                f.write(content['text'])
+                f.write(content["text"])
                 f.write("```)\n")
             else:
-                f.write(content['text'])
+                f.write(content["text"])
             f.write("\n\n")
 
     response = await post_data(url, payload, headers)
@@ -314,18 +333,50 @@ async def qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, a
 
     return response["choices"][0]["message"]["content"]
 
+
 API_ENDPOINTS = {
-    "gemini-flash": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.0-flash", log_folder=log_folder),
-    "gemini-pro": lambda messages, log_folder: gemini_gen(messages, model="gemini-2.5-pro-exp-03-25", log_folder=log_folder),
-    "gemma": lambda messages, log_folder: gemini_gen(messages, model="gemma-3-27b-it", log_folder=log_folder),
-    "deepseek-ds": lambda messages, log_folder: deepseek_gen(messages, url=deepseek_endpoint, model=deepseek_model, api_key=deepseek_api_key, log_folder=log_folder),
-    "deepseek-fd": lambda messages, log_folder: deepseek_gen(messages, url=friendly_endpoint, model=friendly_model, api_key=friendly_api_key, log_folder=log_folder),
-    "deepseek-fw": lambda messages, log_folder: deepseek_gen(messages, url=fireworks_endpoint, model=fireworks_ds_model, api_key=fireworks_api_key, log_folder=log_folder),
+    "gemini-flash": lambda messages, log_folder: gemini_gen(
+        messages, model="gemini-2.0-flash", log_folder=log_folder
+    ),
+    "gemini-pro": lambda messages, log_folder: gemini_gen(
+        messages, model="gemini-2.5-pro-exp-03-25", log_folder=log_folder
+    ),
+    "gemma": lambda messages, log_folder: gemini_gen(
+        messages, model="gemma-3-27b-it", log_folder=log_folder
+    ),
+    "deepseek-ds": lambda messages, log_folder: deepseek_gen(
+        messages,
+        url=deepseek_endpoint,
+        model=deepseek_model,
+        api_key=deepseek_api_key,
+        log_folder=log_folder,
+    ),
+    "deepseek-fd": lambda messages, log_folder: deepseek_gen(
+        messages,
+        url=friendly_endpoint,
+        model=friendly_model,
+        api_key=friendly_api_key,
+        log_folder=log_folder,
+    ),
+    "deepseek-fw": lambda messages, log_folder: deepseek_gen(
+        messages,
+        url=fireworks_endpoint,
+        model=fireworks_ds_model,
+        api_key=fireworks_api_key,
+        log_folder=log_folder,
+    ),
     "claude": claude_gen,
-    "qwq-fw": lambda messages, log_folder: qwq_gen(messages, url=fireworks_endpoint, model=fireworks_qwq_model, api_key=fireworks_api_key, log_folder=log_folder)
+    "qwq-fw": lambda messages, log_folder: qwq_gen(
+        messages,
+        url=fireworks_endpoint,
+        model=fireworks_qwq_model,
+        api_key=fireworks_api_key,
+        log_folder=log_folder,
+    ),
 }
 
 if __name__ == "__main__":
     from prompts import COMMON_PROMPT, MATMUL_PROMPT
+
     print(API_ENDPOINTS["gemini"](COMMON_PROMPT + MATMUL_PROMPT))
     print(API_ENDPOINTS["deepseek"](COMMON_PROMPT + MATMUL_PROMPT))

@@ -15,7 +15,6 @@ from _benchmark_util import (
     _plot_benchmark_results
 )
 
-
 def verify_correctness_func(func_triton, func_torch, input_generator, dimensions, device='cuda', dtype=torch.float16, atol=1e-2, rtol=1e-2, seed=42):
     """
     Verify the function correctness of triton implementation against torch implementation

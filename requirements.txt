@@ -1,0 +1,8 @@
+torch
+triton
+numpy
+matplotlib
+aiohttp
+google-genai
+openai
+boto3
